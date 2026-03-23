@@ -25,6 +25,14 @@
     urlcolor=blue!60!black
 }
 
+% Force un retour à la ligne après \paragraph
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {1.5ex \@plus 0.5ex \@minus .2ex}%
+  {0.5ex \@plus .2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+
 \title{Projet Bloc IA \\ \Large Analyse du turnover chez HumanForYou}
 \author{
     Maxence Chartier \and
@@ -47,7 +55,7 @@ L'entreprise \textbf{HumanForYou}, acteur du secteur des ressources humaines bas
 
 Ce projet s'inscrit dans le cadre du bloc de formation en Intelligence Artificielle et poursuit plusieurs objectifs :
 \begin{enumerate}
-    \item \textbf{Analyser le cadre réglementaire et éthique} entourant l'utilisation de l'IA appliquée aux données RH, en comparant les approches européenne et indienne ;
+    \item \textbf{Analyser le cadre réglementaire et éthique} entourant l'utilisation de l'IA appliquée aux données RH ;
     \item \textbf{Explorer et préparer les données} issues de quatre sources distinctes (données générales, enquêtes, évaluations managériales, horaires de badgeage) ;
     \item \textbf{Construire des modèles prédictifs} de l'attrition à l'aide de techniques de régression et de classification ;
     \item \textbf{Formuler des recommandations} concrètes et actionnables à destination de la direction de HumanForYou.
@@ -55,19 +63,21 @@ Ce projet s'inscrit dans le cadre du bloc de formation en Intelligence Artificie
 
 L'enjeu final n'est pas seulement de produire un modèle performant, mais de transformer les résultats en recommandations stratégiques compréhensibles par un décideur.
 
+Bien que le jeu de données provienne d'une entreprise indienne, nous nous plaçons dans un premier temps \textbf{dans le cadre réglementaire européen} (RGPD, AI Act) pour analyser les enjeux éthiques et juridiques. Dans un second temps, nous comparerons cette approche avec le cadre indien afin de mettre en lumière les convergences et divergences entre les deux systèmes.
+
 % ============================================================
 \section{Cadre réglementaire et éthique}
 
-L'utilisation de l'intelligence artificielle dans le domaine des ressources humaines --- notamment pour la prédiction de l'attrition des employés --- soulève des questions éthiques et juridiques majeures. Cette section présente d'abord le cadre réglementaire européen, puis le cadre indien (contexte de notre jeu de données), avant de proposer une analyse comparative.
+L'utilisation de l'intelligence artificielle dans le domaine des ressources humaines --- notamment pour la prédiction de l'attrition des employés --- soulève des questions éthiques et juridiques majeures. Nous nous plaçons ici dans le cadre européen, comme si le projet était déployé au sein de l'Union européenne.
 
 % ------------------------------------------------------------
-\subsection{Cadre européen}
+\subsection{Cadre réglementaire européen}
 
 \subsubsection{Le Règlement Général sur la Protection des Données (RGPD)}
 
 Le RGPD, entré en vigueur le 25 mai 2018, constitue le socle de la protection des données personnelles dans l'Union européenne. Il s'applique à tout traitement de données personnelles, qu'elles soient numériques ou non \cite{cnil_rgpd}.
 
-\paragraph{Principes fondamentaux.}
+\paragraph{Principes fondamentaux}
 Le règlement repose sur plusieurs principes clés directement applicables à notre projet :
 \begin{itemize}
     \item \textbf{Licéité, loyauté et transparence} : tout traitement doit reposer sur une base juridique valide (consentement, exécution d'un contrat, intérêt légitime, etc.) ;
@@ -78,7 +88,7 @@ Le règlement repose sur plusieurs principes clés directement applicables à no
     \item \textbf{Intégrité et confidentialité} : des mesures techniques et organisationnelles appropriées doivent garantir la sécurité des données \cite{cnil_securite}.
 \end{itemize}
 
-\paragraph{Article 22 --- Décision individuelle automatisée.}
+\paragraph{Article 22 --- Décision individuelle automatisée}
 L'article 22 du RGPD est particulièrement pertinent pour notre projet. Il interdit, en principe, les décisions fondées exclusivement sur un traitement automatisé produisant des effets juridiques ou significatifs sur une personne. Dans le contexte RH, cela signifie qu'un modèle de prédiction de l'attrition \textbf{ne peut pas}, à lui seul, fonder une décision de licenciement, de mutation ou de rétrogradation. Trois exceptions sont prévues :
 \begin{enumerate}
     \item La décision est nécessaire à l'exécution d'un contrat ;
@@ -91,7 +101,7 @@ Dans tous les cas, la personne doit pouvoir obtenir une intervention humaine, ex
 
 Le règlement (UE) 2024/1689, dit \textit{AI Act}, est entré en vigueur le 1\textsuperscript{er} août 2024 avec une application progressive (exigences pour les systèmes à haut risque applicables au 2 août 2026). Il instaure une classification des systèmes d'IA selon leur niveau de risque \cite{ia_act}.
 
-\paragraph{Classification par risque.}
+\paragraph{Classification par risque}
 \begin{itemize}
     \item \textbf{Risque inacceptable} : systèmes interdits (notation sociale, manipulation subliminale, etc.) ;
     \item \textbf{Risque élevé} : systèmes soumis à des obligations strictes ;
@@ -99,7 +109,7 @@ Le règlement (UE) 2024/1689, dit \textit{AI Act}, est entré en vigueur le 1\te
     \item \textbf{Risque minimal} : libre utilisation.
 \end{itemize}
 
-\paragraph{Les systèmes IA en RH : risque élevé.}
+\paragraph{Les systèmes IA en RH : risque élevé}
 L'annexe III de l'AI Act classe explicitement comme \textbf{à haut risque} les systèmes d'IA utilisés dans le domaine de l'emploi, notamment pour :
 \begin{itemize}
     \item Le recrutement et la sélection de candidats ;
@@ -109,7 +119,7 @@ L'annexe III de l'AI Act classe explicitement comme \textbf{à haut risque} les 
 \end{itemize}
 Un système de prédiction de l'attrition tel que le nôtre relève très probablement de cette catégorie dès lors que ses résultats peuvent influencer des décisions relatives à la gestion du personnel.
 
-\paragraph{Obligations pour les systèmes à haut risque.}
+\paragraph{Obligations pour les systèmes à haut risque}
 \begin{enumerate}
     \item \textbf{Système de gestion des risques} : identification et atténuation des risques de biais, de discrimination et d'erreurs ;
     \item \textbf{Gouvernance des données} : données d'entraînement de haute qualité (exactitude, complétude, représentativité), test de biais obligatoire ;
@@ -133,7 +143,7 @@ Le Groupe d'Experts de Haut Niveau sur l'IA (HLEG), nommé par la Commission eur
 
 \subsubsection{Cadre français : contributions majeures}
 
-\paragraph{Rapport de la CNIL (2017).}
+\paragraph{Rapport de la CNIL (2017)}
 La Commission Nationale de l'Informatique et des Libertés a publié en décembre 2017 un rapport intitulé \textit{<<~Comment permettre à l'Homme de garder la main~?~>>}, issu d'un débat public réunissant 3\,000 participants. Ce rapport pose deux principes fondateurs \cite{cnil_ethique} :
 \begin{itemize}
     \item \textbf{Loyauté} : les algorithmes doivent servir les intérêts des utilisateurs en tant que citoyens, et non seulement en tant que consommateurs ;
@@ -141,73 +151,58 @@ La Commission Nationale de l'Informatique et des Libertés a publié en décembr
 \end{itemize}
 Il formule six recommandations opérationnelles : former à l'éthique, rendre les systèmes compréhensibles, concevoir au service de la liberté humaine, constituer une plateforme nationale d'audit, encourager la recherche éthique, et renforcer la fonction éthique en entreprise.
 
-\paragraph{Rapport Villani (2018).}
+\paragraph{Rapport Villani (2018)}
 Le rapport \textit{<<~Donner un sens à l'intelligence artificielle~>>}, remis au Premier ministre par Cédric Villani en mars 2018, définit une stratégie nationale et européenne en IA couvrant six dimensions : politique économique des données, recherche, emploi et transformation du travail, enjeux écologiques, cadre éthique, et inclusivité \cite{villani}.
 
 % ------------------------------------------------------------
-\subsection{Cadre indien}
+\subsection{Application au projet HumanForYou sous le cadre européen}
 
-Notre jeu de données étant issu d'une entreprise basée en Inde, il est essentiel d'examiner le cadre réglementaire indien en matière de protection des données et de gouvernance de l'IA.
+En nous plaçant dans le cadre réglementaire européen, notre projet de prédiction de l'attrition doit respecter plusieurs exigences.
+
+\paragraph{Protection des données personnelles}
+Les données utilisées contiennent des informations sensibles sur les employés : salaire, évaluations de performance, satisfaction, horaires de travail, statut marital. La \textbf{pseudonymisation} (identifiants numériques plutôt que noms) est déjà appliquée dans le jeu de données via la clé \texttt{EmployeeID}, ce qui constitue une bonne pratique conforme au RGPD.
+
+\paragraph{Risques de biais et de discrimination}
+Certaines variables du jeu de données --- telles que \texttt{Gender}, \texttt{MaritalStatus}, \texttt{Age} ou \texttt{Education} --- sont des attributs protégés susceptibles d'introduire des biais discriminatoires dans le modèle. Il sera nécessaire de :
+\begin{itemize}
+    \item Mesurer l'impact de ces variables sur les prédictions ;
+    \item Évaluer l'équité du modèle selon différentes métriques (parité démographique, égalité des chances, etc.) ;
+    \item Le cas échéant, appliquer des techniques de débiaisage.
+\end{itemize}
+
+\paragraph{Transparence et explicabilité}
+Conformément aux principes du HLEG et aux exigences de l'AI Act, le modèle doit être \textbf{interprétable} : il ne suffit pas de prédire l'attrition, il faut être en mesure d'expliquer \textit{pourquoi} un employé est identifié comme à risque. L'utilisation de techniques d'explicabilité (importance des variables, SHAP, LIME, etc.) sera privilégiée.
+
+\paragraph{Supervision humaine}
+Les résultats du modèle doivent servir d'\textbf{aide à la décision} et non de décision automatique. Toute action RH fondée sur les prédictions (entretien, formation, ajustement salarial) doit impliquer un jugement humain qualifié, conformément à l'article 22 du RGPD.
+
+\paragraph{Finalité et proportionnalité}
+Le modèle doit être utilisé dans une finalité légitime : \textbf{la rétention des talents et l'amélioration des conditions de travail}, et non la surveillance ou la sanction des employés. Cette distinction est fondamentale pour garantir la conformité éthique et juridique du projet.
+
+% ------------------------------------------------------------
+\subsection{Bonus : cadre indien et comparaison}
+
+Notre jeu de données étant issu d'une entreprise basée en Inde, il est intéressant d'examiner le cadre réglementaire indien et de le comparer à l'approche européenne.
 
 \subsubsection{Le Digital Personal Data Protection Act (DPDPA, 2023)}
 
 L'Inde a adopté le 11 août 2023 sa première loi cadre de protection des données personnelles numériques, le \textit{Digital Personal Data Protection Act} (DPDPA), dont les règles d'application ont été notifiées en novembre 2025 \cite{dpdpa}.
 
-\paragraph{Champ d'application.}
-Contrairement au RGPD qui couvre toutes les données personnelles (numériques ou non), le DPDPA ne s'applique qu'aux \textbf{données personnelles numériques} (ou non numériques ultérieurement numérisées).
-
-\paragraph{Bases juridiques du traitement.}
-Le DPDPA repose principalement sur deux bases :
+Contrairement au RGPD qui couvre toutes les données personnelles (numériques ou non), le DPDPA ne s'applique qu'aux \textbf{données personnelles numériques}. Il repose principalement sur deux bases juridiques :
 \begin{itemize}
     \item \textbf{Le consentement} : libre, spécifique, éclairé, inconditionnel et sans ambiguïté ;
-    \item \textbf{Les utilisations légitimes} (Section 7 et Annexe 1) : le traitement est autorisé \textit{sans consentement} pour certaines finalités, notamment :
-    \begin{itemize}
-        \item Les finalités liées à l'emploi (Section 7(i)) ;
-        \item La protection de l'employeur contre les pertes ou responsabilités ;
-        \item La fourniture de services ou avantages demandés par l'employé.
-    \end{itemize}
+    \item \textbf{Les utilisations légitimes} (Section 7 et Annexe 1) : le traitement est autorisé \textit{sans consentement} pour certaines finalités, notamment les finalités liées à l'emploi (Section 7(i)), la protection de l'employeur contre les pertes, ou la fourniture de services demandés par l'employé.
 \end{itemize}
 
-\paragraph{Obligations clés.}
-\begin{itemize}
-    \item Désignation d'un responsable de la protection des données (\textit{Data Protection Officer}) ;
-    \item Mise en place de mesures de sécurité : chiffrement, tokenisation, contrôle d'accès ;
-    \item Notification de violation de données sous 72 heures ;
-    \item Information claire des personnes concernées (finalité, données collectées, droits) ;
-    \item Contrats avec les sous-traitants de données.
-\end{itemize}
-
-\paragraph{Sanctions.}
-Les amendes peuvent atteindre 2,5 milliards INR (environ 28 millions d'euros), soit un plafond significativement inférieur à celui du RGPD (4\,\% du chiffre d'affaires mondial ou 20 millions d'euros).
+Les sanctions peuvent atteindre 2,5 milliards INR (environ 28 millions d'euros), un plafond inférieur à celui du RGPD.
 
 \subsubsection{Les India AI Governance Guidelines (2025)}
 
-Publiées le 5 novembre 2025 par le ministère de l'Électronique et des Technologies de l'Information (MeitY), ces lignes directrices définissent l'approche indienne de la gouvernance de l'IA \cite{niti_aayog}.
+Publiées le 5 novembre 2025 par le ministère de l'Électronique et des Technologies de l'Information (MeitY), ces lignes directrices définissent l'approche indienne de la gouvernance de l'IA \cite{niti_aayog}. L'Inde a fait le choix explicite de \textbf{ne pas adopter de loi dédiée à l'IA} à ce stade, en privilégiant une approche \textit{<<~light-touch~>>} fondée sur l'adaptation des cadres existants et des principes non contraignants : confiance intégrée, approche centrée sur l'humain, innovation, et équité.
 
-\paragraph{Philosophie générale.}
-L'Inde a fait le choix explicite de \textbf{ne pas adopter de loi dédiée à l'IA} à ce stade. L'approche repose sur l'adaptation des cadres juridiques existants (DPDPA, IT Act) aux risques spécifiques de l'IA, avec une philosophie \textit{<<~light-touch~>>} privilégiant l'innovation.
+\subsubsection{Comparaison synthétique}
 
-\paragraph{Principes directeurs.}
-\begin{itemize}
-    \item \textbf{Confiance intégrée} : les systèmes d'IA doivent être dignes de confiance à toutes les étapes de leur cycle de vie ;
-    \item \textbf{Approche centrée sur l'humain} : l'IA doit renforcer l'autonomie humaine et rester sous supervision significative ;
-    \item \textbf{Innovation plutôt que restriction} : la gouvernance doit permettre le progrès socio-économique tout en gérant les risques de manière proportionnée ;
-    \item \textbf{Équité et non-discrimination} : éviter les biais, en particulier envers les communautés marginalisées.
-\end{itemize}
-
-\paragraph{Architecture institutionnelle.}
-L'Inde met en place plusieurs organes :
-\begin{itemize}
-    \item \textit{AI Governance Group} (AIGG) : coordination et supervision ;
-    \item \textit{Technology \& Policy Expert Committee} (TPEC) : expertise technique ;
-    \item \textit{AI Safety Institute} (AISI) : recherche en sécurité de l'IA ;
-    \item \textit{National Cyber and AI Center} (NCAIC) : infrastructure et développement.
-\end{itemize}
-
-% ------------------------------------------------------------
-\subsection{Analyse comparative}
-
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Comparaison des cadres réglementaires UE / Inde}
 \label{tab:comparaison}
@@ -216,56 +211,30 @@ L'Inde met en place plusieurs organes :
 \toprule
 \textbf{Critère} & \textbf{Union Européenne} & \textbf{Inde} \\
 \midrule
-Textes principaux & RGPD + AI Act & DPDPA 2023 + AI Governance Guidelines 2025 \\
+Textes principaux & RGPD + AI Act & DPDPA 2023 + AI Guidelines 2025 \\
 \addlinespace
-Portée & Toutes données personnelles & Données personnelles numériques uniquement \\
+Portée & Toutes données personnelles & Données numériques uniquement \\
 \addlinespace
 Bases juridiques & 6 bases (consentement, contrat, intérêt légitime, etc.) & 2 bases (consentement + utilisations légitimes) \\
 \addlinespace
-Données employés & Consentement ou base contractuelle avec évaluation individuelle & Traitement autorisé sans consentement pour finalités d'emploi \\
+Données employés & Consentement ou base contractuelle avec évaluation & Traitement sans consentement pour finalités d'emploi \\
 \addlinespace
-Décision automatisée & Interdite (art.~22 RGPD) sauf exceptions + garanties & Pas d'interdiction explicite ; recommandations non contraignantes \\
+Décision automatisée & Interdite (art.~22) sauf exceptions & Pas d'interdiction explicite \\
 \addlinespace
-Régulation de l'IA & Loi horizontale contraignante (AI Act) & Lignes directrices non contraignantes \\
+Régulation de l'IA & Loi contraignante (AI Act) & Lignes directrices non contraignantes \\
 \addlinespace
-Systèmes IA en RH & Classés haut risque (obligations strictes) & Pas de classification par risque \\
+Systèmes IA en RH & Classés haut risque & Pas de classification par risque \\
 \addlinespace
-Test de biais & Obligatoire (AI Act) & Recommandé (guidelines) \\
+Test de biais & Obligatoire & Recommandé \\
 \addlinespace
-Supervision humaine & Obligatoire avec documentation & Recommandée \\
+Supervision humaine & Obligatoire & Recommandée \\
 \addlinespace
 Sanctions maximales & 4\,\% CA mondial ou 20\,M\euro{} & 2,5 Mds INR ($\approx$ 28\,M\euro{}) \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\paragraph{Synthèse.}
-L'Union européenne adopte une approche \textbf{prescriptive et contraignante}, avec une régulation horizontale par niveaux de risque et des obligations strictes pour les systèmes d'IA en RH. L'Inde privilégie une approche \textbf{souple et incitative}, fondée sur l'adaptation des lois existantes et des principes non contraignants, en vue de favoriser l'innovation. Les deux cadres convergent néanmoins sur les principes fondamentaux : transparence, équité, sécurité des données et supervision humaine.
-
-% ------------------------------------------------------------
-\subsection{Application au projet HumanForYou}
-
-Dans le cadre spécifique de notre projet de prédiction de l'attrition chez HumanForYou, plusieurs enjeux éthiques et réglementaires doivent être pris en compte :
-
-\paragraph{Protection des données personnelles.}
-Les données utilisées contiennent des informations sensibles sur les employés : salaire, évaluations de performance, satisfaction, horaires de travail, statut marital. La \textbf{pseudonymisation} (identifiants numériques plutôt que noms) est déjà appliquée dans le jeu de données via la clé \texttt{EmployeeID}, ce qui constitue une bonne pratique conforme au RGPD et au DPDPA.
-
-\paragraph{Risques de biais et de discrimination.}
-Certaines variables du jeu de données --- telles que \texttt{Gender}, \texttt{MaritalStatus}, \texttt{Age} ou \texttt{Education} --- sont des attributs protégés susceptibles d'introduire des biais discriminatoires dans le modèle. Il sera nécessaire de :
-\begin{itemize}
-    \item Mesurer l'impact de ces variables sur les prédictions ;
-    \item Évaluer l'équité du modèle selon différentes métriques (parité démographique, égalité des chances, etc.) ;
-    \item Le cas échéant, appliquer des techniques de débiaisage.
-\end{itemize}
-
-\paragraph{Transparence et explicabilité.}
-Conformément aux principes du HLEG et aux exigences de l'AI Act, le modèle doit être \textbf{interprétable} : il ne suffit pas de prédire l'attrition, il faut être en mesure d'expliquer \textit{pourquoi} un employé est identifié comme à risque. L'utilisation de techniques d'explicabilité (importance des variables, SHAP, LIME, etc.) sera privilégiée.
-
-\paragraph{Supervision humaine.}
-Les résultats du modèle doivent servir d'\textbf{aide à la décision} et non de décision automatique. Toute action RH fondée sur les prédictions (entretien, formation, ajustement salarial) doit impliquer un jugement humain qualifié, conformément à l'article 22 du RGPD et aux recommandations indiennes.
-
-\paragraph{Finalité et proportionnalité.}
-Le modèle doit être utilisé dans une finalité légitime : \textbf{la rétention des talents et l'amélioration des conditions de travail}, et non la surveillance ou la sanction des employés. Cette distinction est fondamentale pour garantir la conformité éthique et juridique du projet.
+L'Union européenne adopte une approche \textbf{prescriptive et contraignante}, avec une régulation horizontale par niveaux de risque et des obligations strictes pour les systèmes d'IA en RH. L'Inde privilégie une approche \textbf{souple et incitative}, fondée sur l'adaptation des lois existantes et des principes non contraignants. Les deux cadres convergent néanmoins sur les principes fondamentaux : transparence, équité, sécurité des données et supervision humaine.
 
 % ============================================================
 \section{Description des données}
@@ -274,9 +243,9 @@ Quatre sources de données ont été mises à disposition par le service RH de H
 
 \subsection{Données générales (\texttt{general\_data.csv})}
 
-Ce fichier constitue le socle du jeu de données avec \textbf{4\,410 employés} décrits par \textbf{24 variables}. On y retrouve :
+Ce fichier constitue le socle du jeu de données avec \textbf{4\,410 employés} décrits par \textbf{24 variables}.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Variables principales du fichier \texttt{general\_data.csv}}
 \small
@@ -335,7 +304,7 @@ Dernière évaluation de chaque employé par son manager (février 2015) :
 
 Deux fichiers (\texttt{in\_time.csv} et \texttt{out\_time.csv}) contenant les horodatages d'arrivée et de départ pour chaque jour ouvré de 2015 (261 jours). Ces données brutes ont été agrégées en \textbf{six indicateurs} par employé :
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Variables dérivées des horaires de badgeage}
 \small
