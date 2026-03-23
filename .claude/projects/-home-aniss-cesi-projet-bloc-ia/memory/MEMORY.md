@@ -1,0 +1,3 @@
+- [user_profile.md](user_profile.md) - Profil Anisse : étudiant CESI A4, MacOS, VS Code
+- [project_humanforyou.md](project_humanforyou.md) - Projet HumanForYou : turnover, 4 membres, Overleaf, recommandations business
+- [feedback_latex_overleaf.md](feedback_latex_overleaf.md) - Toujours fournir du LaTeX pour les livrables (Overleaf)
