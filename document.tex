@@ -1,0 +1,88 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+\geometry{margin=2.5cm}
+
+\title{Projet Bloc IA --- Analyse du turnover chez HumanForYou}
+\author{Anisse Imer}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Introduction}
+
+L'entreprise HumanForYou fait face à un taux de turnover important parmi ses employés. L'objectif de ce projet est d'analyser les données RH disponibles afin d'identifier les facteurs qui influencent le départ des salariés, puis de proposer un modèle prédictif d'attrition.
+
+% ============================================================
+\section{Description des données}
+
+Quatre sources de données ont été mises à disposition par le service RH.
+
+\subsection{Données générales (\texttt{general\_data.csv})}
+
+Ce fichier contient 4410 employés décrits par 24 variables : âge, département, poste, salaire mensuel, ancienneté, distance domicile-travail, etc. La variable cible \textbf{Attrition} (Yes/No) indique si l'employé a quitté l'entreprise en 2016.
+
+\subsection{Enquête employé (\texttt{employee\_survey\_data.csv})}
+
+Enquête soumise en juin 2015 (réponse non obligatoire). Trois questions notées de 1 à 4 :
+\begin{itemize}
+    \item \texttt{EnvironmentSatisfaction} : satisfaction de l'environnement de travail
+    \item \texttt{JobSatisfaction} : satisfaction du travail
+    \item \texttt{WorkLifeBalance} : équilibre vie pro / vie perso
+\end{itemize}
+
+\subsection{Évaluation manager (\texttt{manager\_survey\_data.csv})}
+
+Dernière évaluation de chaque employé par son manager (février 2015) :
+\begin{itemize}
+    \item \texttt{JobInvolvement} : implication au travail (1 à 4)
+    \item \texttt{PerformanceRating} : performance annuelle (1 à 4)
+\end{itemize}
+
+\subsection{Horaires de badgeage (\texttt{in\_out\_time/})}
+
+Deux fichiers (\texttt{in\_time.csv}, \texttt{out\_time.csv}) contenant les horodatages d'arrivée et de départ pour chaque jour ouvré de 2015 (261 jours). Ces données ont été agrégées en indicateurs par employé : heure d'arrivée/départ moyenne, durée de travail moyenne, nombre de jours d'absence, etc.
+
+\subsection{Liens entre les datasets}
+
+Toutes les sources partagent la clé \texttt{EmployeeID} et entretiennent une relation 1:1. La fusion est réalisée par jointures successives (LEFT JOIN) sur cette clé.
+
+% ============================================================
+\section{Exploration des données}
+
+\textit{À compléter : statistiques descriptives, distributions, taux d'attrition par catégorie, corrélations, valeurs manquantes.}
+
+% ============================================================
+\section{Prétraitement}
+
+\textit{À compléter : gestion des valeurs manquantes, encodage des variables catégorielles, normalisation, sélection de features.}
+
+% ============================================================
+\section{Modélisation}
+
+\textit{À compléter : choix des modèles, entraînement, validation croisée, métriques de performance.}
+
+% ============================================================
+\section{Résultats et interprétation}
+
+\textit{À compléter : importance des variables, analyse des facteurs de turnover, recommandations.}
+
+% ============================================================
+\section{Conclusion}
+
+\textit{À compléter : synthèse des résultats, limites, perspectives.}
+
+\end{document}
