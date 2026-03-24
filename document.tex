@@ -15,6 +15,7 @@
 \usepackage{tabularx}
 \usepackage{caption}
 \usepackage{eurosym}
+\usepackage{multirow}
 
 \geometry{margin=2.5cm}
 
@@ -329,7 +330,229 @@ La fusion des quatre sources produit un jeu de données unique de \textbf{4\,410
 % ============================================================
 \section{Exploration des données}
 
-\textit{À compléter : statistiques descriptives, distributions, taux d'attrition par catégorie, corrélations, valeurs manquantes, visualisations (Seaborn, Plotly, Matplotlib).}
+Cette section présente les résultats de l'analyse exploratoire (EDA) réalisée sur le jeu de données fusionné.
+
+\subsection{Variable cible : Attrition}
+
+Sur les 4\,410 employés, \textbf{711 ont quitté l'entreprise} en 2016, soit un taux d'attrition de \textbf{16,1\,\%}. Les 3\,699 restants (83,9\,\%) sont demeurés en poste. Ce déséquilibre entre les classes devra être pris en compte lors de la modélisation.
+
+\subsection{Valeurs manquantes}
+
+Le jeu de données fusionné présente un faible taux de valeurs manquantes, concentré sur cinq variables :
+
+\begin{table}[htbp]
+\centering
+\caption{Valeurs manquantes dans le jeu de données fusionné}
+\small
+\begin{tabular}{l r r}
+\toprule
+\textbf{Variable} & \textbf{Manquantes} & \textbf{Proportion} \\
+\midrule
+WorkLifeBalance & 38 & 0,9\,\% \\
+EnvironmentSatisfaction & 25 & 0,6\,\% \\
+JobSatisfaction & 20 & 0,5\,\% \\
+NumCompaniesWorked & 19 & 0,4\,\% \\
+TotalWorkingYears & 9 & 0,2\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Les trois premières proviennent de l'enquête employé (réponse non obligatoire), les deux dernières des données générales. Le taux global reste très faible ($<$\,1\,\% par variable).
+
+\subsection{Statistiques descriptives des variables numériques}
+
+\begin{table}[htbp]
+\centering
+\caption{Statistiques descriptives des principales variables numériques}
+\small
+\begin{tabular}{l r r r r r}
+\toprule
+\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Médiane} & \textbf{Min} & \textbf{Max} \\
+\midrule
+Age (années) & 36,92 & 9,13 & 36 & 18 & 60 \\
+MonthlyIncome (INR) & 65\,029 & 47\,069 & 49\,190 & 10\,090 & 199\,990 \\
+DistanceFromHome (km) & 9,19 & 8,11 & 7 & 1 & 29 \\
+TotalWorkingYears & 11,28 & 7,78 & 10 & 0 & 40 \\
+YearsAtCompany & 7,01 & 6,13 & 5 & 0 & 40 \\
+PercentSalaryHike (\%) & 15,21 & 3,66 & 14 & 11 & 25 \\
+YearsSinceLastPromotion & 2,19 & 3,22 & 1 & 0 & 15 \\
+YearsWithCurrManager & 4,12 & 3,57 & 3 & 0 & 17 \\
+NumCompaniesWorked & 2,69 & 2,50 & 2 & 0 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On observe une forte dispersion des revenus (écart-type de 47\,069 INR pour une moyenne de 65\,029 INR), ce qui reflète la diversité des niveaux hiérarchiques. L'ancienneté moyenne est de 7 ans, avec une médiane à 5 ans, indiquant une distribution asymétrique à droite.
+
+\subsection{Variables d'enquête et d'évaluation}
+
+\begin{table}[htbp]
+\centering
+\caption{Statistiques des variables d'enquête (échelle 1--4)}
+\small
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Médiane} \\
+\midrule
+EnvironmentSatisfaction & 2,72 & 1,09 & 3 \\
+JobSatisfaction & 2,73 & 1,10 & 3 \\
+WorkLifeBalance & 2,76 & 0,71 & 3 \\
+JobInvolvement & 2,73 & 0,71 & 3 \\
+PerformanceRating & 3,15 & 0,36 & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La variable \texttt{PerformanceRating} présente une particularité : aucun employé n'a reçu une note inférieure à 3, ce qui suggère une évaluation peu discriminante de la part des managers.
+
+\subsection{Indicateurs issus des horaires de badgeage}
+
+\begin{table}[htbp]
+\centering
+\caption{Statistiques des variables temporelles agrégées}
+\small
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Min} & \textbf{Max} \\
+\midrule
+avg\_in\_hour & 9,99 & 0,02 & 9,93 & 10,07 \\
+avg\_out\_hour & 17,69 & 1,34 & 15,94 & 21,06 \\
+avg\_work\_hours & 7,70 & 1,34 & 5,95 & 11,03 \\
+std\_work\_hours & 0,30 & 0,01 & 0,26 & 0,35 \\
+nb\_days\_present & 236,27 & 5,50 & 225 & 248 \\
+nb\_days\_absent & 24,73 & 5,50 & 13 & 36 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+L'heure d'arrivée est très homogène (écart-type de 0,02 h), alors que l'heure de départ varie fortement (écart-type de 1,34 h), ce qui se traduit par une grande dispersion de la durée de travail journalière (de 5,95 h à 11,03 h).
+
+\subsection{Répartition des variables catégorielles}
+
+\begin{table}[htbp]
+\centering
+\caption{Distribution des principales variables catégorielles}
+\small
+\begin{tabular}{l l r r}
+\toprule
+\textbf{Variable} & \textbf{Modalité} & \textbf{Effectif} & \textbf{Proportion} \\
+\midrule
+\multirow{3}{*}{Department} & Research \& Development & 2\,883 & 65,4\,\% \\
+ & Sales & 1\,338 & 30,3\,\% \\
+ & Human Resources & 189 & 4,3\,\% \\
+\addlinespace
+\multirow{2}{*}{Gender} & Male & 2\,646 & 60,0\,\% \\
+ & Female & 1\,764 & 40,0\,\% \\
+\addlinespace
+\multirow{3}{*}{MaritalStatus} & Married & 2\,019 & 45,8\,\% \\
+ & Single & 1\,410 & 32,0\,\% \\
+ & Divorced & 981 & 22,2\,\% \\
+\addlinespace
+\multirow{3}{*}{BusinessTravel} & Travel\_Rarely & 3\,129 & 70,9\,\% \\
+ & Travel\_Frequently & 831 & 18,8\,\% \\
+ & Non-Travel & 450 & 10,2\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Le département R\&D concentre les deux tiers des effectifs. La répartition hommes/femmes est de 60/40. Près de la moitié des employés sont mariés.
+
+\subsection{Taux d'attrition par catégorie}
+
+L'analyse du taux d'attrition par sous-groupe révèle des disparités significatives :
+
+\begin{table}[htbp]
+\centering
+\caption{Taux d'attrition par catégorie}
+\small
+\begin{tabular}{l l r r}
+\toprule
+\textbf{Variable} & \textbf{Modalité} & \textbf{Départs} & \textbf{Taux} \\
+\midrule
+\multirow{3}{*}{Department} & Human Resources & 57 / 189 & \textbf{30,2\,\%} \\
+ & R\&D & 453 / 2\,883 & 15,7\,\% \\
+ & Sales & 201 / 1\,338 & 15,0\,\% \\
+\addlinespace
+\multirow{3}{*}{MaritalStatus} & Single & 360 / 1\,410 & \textbf{25,5\,\%} \\
+ & Married & 252 / 2\,019 & 12,5\,\% \\
+ & Divorced & 99 / 981 & 10,1\,\% \\
+\addlinespace
+\multirow{3}{*}{BusinessTravel} & Travel\_Frequently & 207 / 831 & \textbf{24,9\,\%} \\
+ & Travel\_Rarely & 468 / 3\,129 & 15,0\,\% \\
+ & Non-Travel & 36 / 450 & 8,0\,\% \\
+\addlinespace
+\multirow{2}{*}{Gender} & Male & 441 / 2\,646 & 16,7\,\% \\
+ & Female & 270 / 1\,764 & 15,3\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Trois catégories se démarquent par un taux d'attrition nettement supérieur à la moyenne (16,1\,\%) :
+\begin{itemize}
+    \item Le département \textbf{Human Resources} (30,2\,\%), soit presque le double de la moyenne ;
+    \item Les employés \textbf{célibataires} (25,5\,\%), contre 10,1\,\% pour les divorcés ;
+    \item Les \textbf{voyageurs fréquents} (24,9\,\%), soit trois fois plus que les sédentaires (8,0\,\%).
+\end{itemize}
+En revanche, l'écart entre hommes et femmes est faible (16,7\,\% vs 15,3\,\%).
+
+\subsection{Comparaison des moyennes selon l'attrition}
+
+\begin{table}[htbp]
+\centering
+\caption{Moyennes des variables numériques selon le statut d'attrition}
+\small
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Variable} & \textbf{Partis (Yes)} & \textbf{Restés (No)} & \textbf{Écart} \\
+\midrule
+Age (années) & 33,61 & 37,56 & $-$3,95 \\
+MonthlyIncome (INR) & 61\,683 & 65\,673 & $-$3\,990 \\
+YearsAtCompany & 5,13 & 7,37 & $-$2,24 \\
+TotalWorkingYears & 8,26 & 11,86 & $-$3,60 \\
+YearsWithCurrManager & 2,85 & 4,37 & $-$1,52 \\
+avg\_work\_hours & \textbf{8,32} & \textbf{7,58} & $+$0,74 \\
+NumCompaniesWorked & 2,94 & 2,65 & $+$0,29 \\
+nb\_days\_absent & 24,19 & 24,84 & $-$0,65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Les employés ayant quitté l'entreprise sont en moyenne \textbf{plus jeunes} ($-$4 ans), avec \textbf{moins d'ancienneté} ($-$2,2 ans), \textbf{moins d'expérience} ($-$3,6 ans), et une relation plus courte avec leur manager ($-$1,5 ans). Le résultat le plus notable concerne la \textbf{durée de travail journalière} : les employés partis travaillaient en moyenne 8,32 heures par jour contre 7,58 pour ceux restés, soit 45 minutes de plus par jour.
+
+\subsection{Corrélations avec l'attrition}
+
+Les corrélations de Pearson entre les variables numériques et la variable cible (Attrition encodée en 0/1) mettent en évidence les facteurs les plus associés au départ :
+
+\begin{table}[htbp]
+\centering
+\caption{Principales corrélations avec l'attrition (valeur absolue décroissante)}
+\small
+\begin{tabular}{l r l}
+\toprule
+\textbf{Variable} & \textbf{Corrélation} & \textbf{Interprétation} \\
+\midrule
+avg\_work\_hours & $+$0,202 & Plus d'heures $\rightarrow$ plus de départs \\
+avg\_out\_hour & $+$0,202 & Départ tardif $\rightarrow$ plus de départs \\
+TotalWorkingYears & $-$0,170 & Moins d'expérience $\rightarrow$ plus de départs \\
+Age & $-$0,159 & Plus jeune $\rightarrow$ plus de départs \\
+YearsWithCurrManager & $-$0,156 & Manager récent $\rightarrow$ plus de départs \\
+YearsAtCompany & $-$0,134 & Moins d'ancienneté $\rightarrow$ plus de départs \\
+JobSatisfaction & $-$0,103 & Insatisfaction $\rightarrow$ plus de départs \\
+EnvironmentSatisfaction & $-$0,102 & Env. insatisfaisant $\rightarrow$ plus de départs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Les corrélations restent modérées (max $|r| = 0,20$), ce qui est typique des problèmes de classification binaire avec de nombreuses variables. Les deux facteurs les plus associés sont liés au temps de travail effectif, suivis par les variables d'ancienneté et de satisfaction.
+
+\subsection{Variables à variance nulle}
+
+Trois variables présentent une variance nulle et seront supprimées :
+\begin{itemize}
+    \item \texttt{EmployeeCount} : toujours égal à 1 ;
+    \item \texttt{Over18} : toujours <<~Y~>> ;
+    \item \texttt{StandardHours} : toujours égal à 8.
+\end{itemize}
 
 % ============================================================
 \section{Prétraitement}
