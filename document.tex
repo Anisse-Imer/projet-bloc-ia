@@ -46,6 +46,8 @@
 \begin{document}
 
 \maketitle
+\thispagestyle{empty}
+\newpage
 \tableofcontents
 \newpage
 
@@ -336,6 +338,13 @@ Cette section présente les résultats de l'analyse exploratoire (EDA) réalisé
 
 Sur les 4\,410 employés, \textbf{711 ont quitté l'entreprise} en 2016, soit un taux d'attrition de \textbf{16,1\,\%}. Les 3\,699 restants (83,9\,\%) sont demeurés en poste. Ce déséquilibre entre les classes devra être pris en compte lors de la modélisation.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_attrition_distribution.png}
+\caption{Distribution de la variable cible Attrition (effectifs et proportions)}
+\label{fig:attrition_distribution}
+\end{figure}
+
 \subsection{Valeurs manquantes}
 
 Le jeu de données fusionné présente un faible taux de valeurs manquantes, concentré sur cinq variables :
@@ -358,6 +367,13 @@ TotalWorkingYears & 9 & 0,2\,\% \\
 \end{table}
 
 Les trois premières proviennent de l'enquête employé (réponse non obligatoire), les deux dernières des données générales. Le taux global reste très faible ($<$\,1\,\% par variable).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_absences_distribution.png}
+\caption{Distribution du nombre de jours d'absence par employé (données de badgeage)}
+\label{fig:absences}
+\end{figure}
 
 \subsection{Statistiques descriptives des variables numériques}
 
@@ -384,6 +400,13 @@ NumCompaniesWorked & 2,69 & 2,50 & 2 & 0 & 9 \\
 
 On observe une forte dispersion des revenus (écart-type de 47\,069 INR pour une moyenne de 65\,029 INR), ce qui reflète la diversité des niveaux hiérarchiques. L'ancienneté moyenne est de 7 ans, avec une médiane à 5 ans, indiquant une distribution asymétrique à droite.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_numeric_distributions.png}
+\caption{Distributions des variables numériques clés, segmentées par statut d'attrition}
+\label{fig:numeric_distributions}
+\end{figure}
+
 \subsection{Variables d'enquête et d'évaluation}
 
 \begin{table}[htbp]
@@ -404,6 +427,27 @@ PerformanceRating & 3,15 & 0,36 & 3 \\
 \end{table}
 
 La variable \texttt{PerformanceRating} présente une particularité : aucun employé n'a reçu une note inférieure à 3, ce qui suggère une évaluation peu discriminante de la part des managers.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_survey_distributions.png}
+\caption{Distribution des réponses à l'enquête employé (échelle 1--4)}
+\label{fig:survey_distributions}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_manager_evaluations.png}
+\caption{Distribution des évaluations managériales (JobInvolvement et PerformanceRating)}
+\label{fig:manager_evaluations}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.65\textwidth]{figures/fig_survey_correlation.png}
+\caption{Matrice de corrélation entre les variables d'enquête}
+\label{fig:survey_correlation}
+\end{figure}
 
 \subsection{Indicateurs issus des horaires de badgeage}
 
@@ -426,6 +470,20 @@ nb\_days\_absent & 24,73 & 5,50 & 13 & 36 \\
 \end{table}
 
 L'heure d'arrivée est très homogène (écart-type de 0,02 h), alors que l'heure de départ varie fortement (écart-type de 1,34 h), ce qui se traduit par une grande dispersion de la durée de travail journalière (de 5,95 h à 11,03 h).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_work_hours_distribution.png}
+\caption{Distribution des durées de travail quotidiennes (toutes dates confondues)}
+\label{fig:work_hours}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_time_features.png}
+\caption{Indicateurs agrégés issus des horaires de badgeage}
+\label{fig:time_features}
+\end{figure}
 
 \subsection{Répartition des variables catégorielles}
 
@@ -456,6 +514,13 @@ L'heure d'arrivée est très homogène (écart-type de 0,02 h), alors que l'heur
 \end{table}
 
 Le département R\&D concentre les deux tiers des effectifs. La répartition hommes/femmes est de 60/40. Près de la moitié des employés sont mariés.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_attrition_by_category.png}
+\caption{Taux d'attrition par variable catégorielle}
+\label{fig:attrition_by_category}
+\end{figure}
 
 \subsection{Taux d'attrition par catégorie}
 
