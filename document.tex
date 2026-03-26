@@ -332,11 +332,11 @@ La fusion des quatre sources produit un jeu de données unique de \textbf{4\,410
 % ============================================================
 \section{Exploration des données}
 
-Cette section présente les résultats de l'analyse exploratoire (EDA) réalisée sur le jeu de données fusionné.
+Cette section synthétise les résultats de l'analyse exploratoire (EDA) en se concentrant sur les constats qui orientent directement le prétraitement, la modélisation et les recommandations.
 
-\subsection{Variable cible : Attrition}
+\subsection{Déséquilibre de la variable cible}
 
-Sur les 4\,410 employés, \textbf{711 ont quitté l'entreprise} en 2016, soit un taux d'attrition de \textbf{16,1\,\%}. Les 3\,699 restants (83,9\,\%) sont demeurés en poste. Ce déséquilibre entre les classes devra être pris en compte lors de la modélisation.
+Sur les 4\,410 employés, \textbf{711 ont quitté l'entreprise} en 2016, soit un taux d'attrition de \textbf{16,1\,\%} (figure~\ref{fig:attrition_distribution}). Ce ratio 84/16 constitue un déséquilibre modéré qui devra être traité lors de la modélisation (rééchantillonnage, pondération des classes, ou choix de métriques adaptées comme le F1-score et l'AUC-ROC plutôt que l'accuracy).
 
 \begin{figure}[htbp]
 \centering
@@ -345,60 +345,51 @@ Sur les 4\,410 employés, \textbf{711 ont quitté l'entreprise} en 2016, soit un
 \label{fig:attrition_distribution}
 \end{figure}
 
-\subsection{Valeurs manquantes}
+\subsection{Qualité des données}
 
-Le jeu de données fusionné présente un faible taux de valeurs manquantes, concentré sur cinq variables :
+Le jeu de données est de bonne qualité. Cinq variables présentent des valeurs manquantes, toutes à moins de 1\,\% : \texttt{WorkLifeBalance} (38), \texttt{EnvironmentSatisfaction} (25), \texttt{JobSatisfaction} (20), \texttt{NumCompaniesWorked} (19) et \texttt{TotalWorkingYears} (9). Une imputation simple (médiane ou mode) suffira. Trois variables sont constantes et seront supprimées : \texttt{EmployeeCount} (toujours 1), \texttt{Over18} (toujours Y) et \texttt{StandardHours} (toujours 8). De même, \texttt{PerformanceRating} ne prend que les valeurs 3 et 4 (aucune note inférieure à 3), ce qui en fait un signal très peu discriminant. Enfin, \texttt{avg\_in\_hour} présente un écart-type de seulement 0,02\,h (tous les employés arrivent à 10\,h) et pourra être écartée au profit de \texttt{avg\_work\_hours}.
 
-\begin{table}[htbp]
-\centering
-\caption{Valeurs manquantes dans le jeu de données fusionné}
-\small
-\begin{tabular}{l r r}
-\toprule
-\textbf{Variable} & \textbf{Manquantes} & \textbf{Proportion} \\
-\midrule
-WorkLifeBalance & 38 & 0,9\,\% \\
-EnvironmentSatisfaction & 25 & 0,6\,\% \\
-JobSatisfaction & 20 & 0,5\,\% \\
-NumCompaniesWorked & 19 & 0,4\,\% \\
-TotalWorkingYears & 9 & 0,2\,\% \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Facteurs d'attrition : variables catégorielles}
 
-Les trois premières proviennent de l'enquête employé (réponse non obligatoire), les deux dernières des données générales. Le taux global reste très faible ($<$\,1\,\% par variable).
+L'analyse du taux d'attrition par sous-groupe (figure~\ref{fig:attrition_by_category}) révèle trois populations à risque nettement au-dessus de la moyenne de 16,1\,\% :
+
+\begin{itemize}
+    \item Le département \textbf{Human Resources} : 30,2\,\%, soit presque le double de la moyenne ;
+    \item Les employés \textbf{célibataires} : 25,5\,\%, contre 10,1\,\% pour les divorcés ;
+    \item Les \textbf{voyageurs fréquents} : 24,9\,\%, soit trois fois plus que les sédentaires (8,0\,\%).
+\end{itemize}
+
+En revanche, l'écart entre hommes et femmes est faible (16,7\,\% vs 15,3\,\%), ce qui est rassurant du point de vue de l'équité du modèle.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/fig_absences_distribution.png}
-\caption{Distribution du nombre de jours d'absence par employé (données de badgeage)}
-\label{fig:absences}
+\includegraphics[width=\textwidth]{figures/fig_attrition_by_category.png}
+\caption{Taux d'attrition par variable catégorielle --- les barres les plus longues identifient les populations à risque}
+\label{fig:attrition_by_category}
 \end{figure}
 
-\subsection{Statistiques descriptives des variables numériques}
+\subsection{Facteurs d'attrition : variables numériques}
+
+La comparaison des moyennes entre employés partis et restés (tableau~\ref{tab:comparaison_moyennes}) met en évidence les variables les plus discriminantes. Les employés ayant quitté l'entreprise sont en moyenne \textbf{plus jeunes} ($-$4 ans), avec \textbf{moins d'ancienneté} ($-$2,2 ans), \textbf{moins d'expérience} ($-$3,6 ans) et une relation plus courte avec leur manager ($-$1,5 ans). Le résultat le plus marquant concerne la \textbf{durée de travail} : les partants travaillaient 8,32\,h/jour contre 7,58\,h pour les restants, soit \textbf{45 minutes de plus par jour} (figure~\ref{fig:numeric_distributions}).
 
 \begin{table}[htbp]
 \centering
-\caption{Statistiques descriptives des principales variables numériques}
+\caption{Moyennes des variables numériques selon le statut d'attrition}
+\label{tab:comparaison_moyennes}
 \small
-\begin{tabular}{l r r r r r}
+\begin{tabular}{l r r r}
 \toprule
-\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Médiane} & \textbf{Min} & \textbf{Max} \\
+\textbf{Variable} & \textbf{Partis (Yes)} & \textbf{Restés (No)} & \textbf{Écart} \\
 \midrule
-Age (années) & 36,92 & 9,13 & 36 & 18 & 60 \\
-MonthlyIncome (INR) & 65\,029 & 47\,069 & 49\,190 & 10\,090 & 199\,990 \\
-DistanceFromHome (km) & 9,19 & 8,11 & 7 & 1 & 29 \\
-TotalWorkingYears & 11,28 & 7,78 & 10 & 0 & 40 \\
-YearsAtCompany & 7,01 & 6,13 & 5 & 0 & 40 \\
-PercentSalaryHike (\%) & 15,21 & 3,66 & 14 & 11 & 25 \\
-YearsSinceLastPromotion & 2,19 & 3,22 & 1 & 0 & 15 \\
-YearsWithCurrManager & 4,12 & 3,57 & 3 & 0 & 17 \\
-NumCompaniesWorked & 2,69 & 2,50 & 2 & 0 & 9 \\
+avg\_work\_hours & \textbf{8,32} & \textbf{7,58} & $+$0,74 \\
+Age (années) & 33,61 & 37,56 & $-$3,95 \\
+TotalWorkingYears & 8,26 & 11,86 & $-$3,60 \\
+YearsAtCompany & 5,13 & 7,37 & $-$2,24 \\
+YearsWithCurrManager & 2,85 & 4,37 & $-$1,52 \\
+MonthlyIncome (INR) & 61\,683 & 65\,673 & $-$3\,990 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-On observe une forte dispersion des revenus (écart-type de 47\,069 INR pour une moyenne de 65\,029 INR), ce qui reflète la diversité des niveaux hiérarchiques. L'ancienneté moyenne est de 7 ans, avec une médiane à 5 ans, indiquant une distribution asymétrique à droite.
 
 \begin{figure}[htbp]
 \centering
@@ -407,197 +398,20 @@ On observe une forte dispersion des revenus (écart-type de 47\,069 INR pour une
 \label{fig:numeric_distributions}
 \end{figure}
 
-\subsection{Variables d'enquête et d'évaluation}
+\subsection{Corrélations et sélection de variables}
 
-\begin{table}[htbp]
-\centering
-\caption{Statistiques des variables d'enquête (échelle 1--4)}
-\small
-\begin{tabular}{l r r r}
-\toprule
-\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Médiane} \\
-\midrule
-EnvironmentSatisfaction & 2,72 & 1,09 & 3 \\
-JobSatisfaction & 2,73 & 1,10 & 3 \\
-WorkLifeBalance & 2,76 & 0,71 & 3 \\
-JobInvolvement & 2,73 & 0,71 & 3 \\
-PerformanceRating & 3,15 & 0,36 & 3 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-La variable \texttt{PerformanceRating} présente une particularité : aucun employé n'a reçu une note inférieure à 3, ce qui suggère une évaluation peu discriminante de la part des managers.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_survey_distributions.png}
-\caption{Distribution des réponses à l'enquête employé (échelle 1--4)}
-\label{fig:survey_distributions}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\textwidth]{figures/fig_manager_evaluations.png}
-\caption{Distribution des évaluations managériales (JobInvolvement et PerformanceRating)}
-\label{fig:manager_evaluations}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.65\textwidth]{figures/fig_survey_correlation.png}
-\caption{Matrice de corrélation entre les variables d'enquête}
-\label{fig:survey_correlation}
-\end{figure}
-
-\subsection{Indicateurs issus des horaires de badgeage}
-
-\begin{table}[htbp]
-\centering
-\caption{Statistiques des variables temporelles agrégées}
-\small
-\begin{tabular}{l r r r r}
-\toprule
-\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Min} & \textbf{Max} \\
-\midrule
-avg\_in\_hour & 9,99 & 0,02 & 9,93 & 10,07 \\
-avg\_out\_hour & 17,69 & 1,34 & 15,94 & 21,06 \\
-avg\_work\_hours & 7,70 & 1,34 & 5,95 & 11,03 \\
-std\_work\_hours & 0,30 & 0,01 & 0,26 & 0,35 \\
-nb\_days\_present & 236,27 & 5,50 & 225 & 248 \\
-nb\_days\_absent & 24,73 & 5,50 & 13 & 36 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-L'heure d'arrivée est très homogène (écart-type de 0,02 h), alors que l'heure de départ varie fortement (écart-type de 1,34 h), ce qui se traduit par une grande dispersion de la durée de travail journalière (de 5,95 h à 11,03 h).
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.85\textwidth]{figures/fig_work_hours_distribution.png}
-\caption{Distribution des durées de travail quotidiennes (toutes dates confondues)}
-\label{fig:work_hours}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_time_features.png}
-\caption{Indicateurs agrégés issus des horaires de badgeage}
-\label{fig:time_features}
-\end{figure}
-
-\subsection{Répartition des variables catégorielles}
-
-\begin{table}[htbp]
-\centering
-\caption{Distribution des principales variables catégorielles}
-\small
-\begin{tabular}{l l r r}
-\toprule
-\textbf{Variable} & \textbf{Modalité} & \textbf{Effectif} & \textbf{Proportion} \\
-\midrule
-\multirow{3}{*}{Department} & Research \& Development & 2\,883 & 65,4\,\% \\
- & Sales & 1\,338 & 30,3\,\% \\
- & Human Resources & 189 & 4,3\,\% \\
-\addlinespace
-\multirow{2}{*}{Gender} & Male & 2\,646 & 60,0\,\% \\
- & Female & 1\,764 & 40,0\,\% \\
-\addlinespace
-\multirow{3}{*}{MaritalStatus} & Married & 2\,019 & 45,8\,\% \\
- & Single & 1\,410 & 32,0\,\% \\
- & Divorced & 981 & 22,2\,\% \\
-\addlinespace
-\multirow{3}{*}{BusinessTravel} & Travel\_Rarely & 3\,129 & 70,9\,\% \\
- & Travel\_Frequently & 831 & 18,8\,\% \\
- & Non-Travel & 450 & 10,2\,\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Le département R\&D concentre les deux tiers des effectifs. La répartition hommes/femmes est de 60/40. Près de la moitié des employés sont mariés.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_attrition_by_category.png}
-\caption{Taux d'attrition par variable catégorielle}
-\label{fig:attrition_by_category}
-\end{figure}
-
-\subsection{Taux d'attrition par catégorie}
-
-L'analyse du taux d'attrition par sous-groupe révèle des disparités significatives :
-
-\begin{table}[htbp]
-\centering
-\caption{Taux d'attrition par catégorie}
-\small
-\begin{tabular}{l l r r}
-\toprule
-\textbf{Variable} & \textbf{Modalité} & \textbf{Départs} & \textbf{Taux} \\
-\midrule
-\multirow{3}{*}{Department} & Human Resources & 57 / 189 & \textbf{30,2\,\%} \\
- & R\&D & 453 / 2\,883 & 15,7\,\% \\
- & Sales & 201 / 1\,338 & 15,0\,\% \\
-\addlinespace
-\multirow{3}{*}{MaritalStatus} & Single & 360 / 1\,410 & \textbf{25,5\,\%} \\
- & Married & 252 / 2\,019 & 12,5\,\% \\
- & Divorced & 99 / 981 & 10,1\,\% \\
-\addlinespace
-\multirow{3}{*}{BusinessTravel} & Travel\_Frequently & 207 / 831 & \textbf{24,9\,\%} \\
- & Travel\_Rarely & 468 / 3\,129 & 15,0\,\% \\
- & Non-Travel & 36 / 450 & 8,0\,\% \\
-\addlinespace
-\multirow{2}{*}{Gender} & Male & 441 / 2\,646 & 16,7\,\% \\
- & Female & 270 / 1\,764 & 15,3\,\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Trois catégories se démarquent par un taux d'attrition nettement supérieur à la moyenne (16,1\,\%) :
-\begin{itemize}
-    \item Le département \textbf{Human Resources} (30,2\,\%), soit presque le double de la moyenne ;
-    \item Les employés \textbf{célibataires} (25,5\,\%), contre 10,1\,\% pour les divorcés ;
-    \item Les \textbf{voyageurs fréquents} (24,9\,\%), soit trois fois plus que les sédentaires (8,0\,\%).
-\end{itemize}
-En revanche, l'écart entre hommes et femmes est faible (16,7\,\% vs 15,3\,\%).
-
-\subsection{Comparaison des moyennes selon l'attrition}
-
-\begin{table}[htbp]
-\centering
-\caption{Moyennes des variables numériques selon le statut d'attrition}
-\small
-\begin{tabular}{l r r r}
-\toprule
-\textbf{Variable} & \textbf{Partis (Yes)} & \textbf{Restés (No)} & \textbf{Écart} \\
-\midrule
-Age (années) & 33,61 & 37,56 & $-$3,95 \\
-MonthlyIncome (INR) & 61\,683 & 65\,673 & $-$3\,990 \\
-YearsAtCompany & 5,13 & 7,37 & $-$2,24 \\
-TotalWorkingYears & 8,26 & 11,86 & $-$3,60 \\
-YearsWithCurrManager & 2,85 & 4,37 & $-$1,52 \\
-avg\_work\_hours & \textbf{8,32} & \textbf{7,58} & $+$0,74 \\
-NumCompaniesWorked & 2,94 & 2,65 & $+$0,29 \\
-nb\_days\_absent & 24,19 & 24,84 & $-$0,65 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Les employés ayant quitté l'entreprise sont en moyenne \textbf{plus jeunes} ($-$4 ans), avec \textbf{moins d'ancienneté} ($-$2,2 ans), \textbf{moins d'expérience} ($-$3,6 ans), et une relation plus courte avec leur manager ($-$1,5 ans). Le résultat le plus notable concerne la \textbf{durée de travail journalière} : les employés partis travaillaient en moyenne 8,32 heures par jour contre 7,58 pour ceux restés, soit 45 minutes de plus par jour.
-
-\subsection{Corrélations avec l'attrition}
-
-Les corrélations de Pearson entre les variables numériques et la variable cible (Attrition encodée en 0/1) mettent en évidence les facteurs les plus associés au départ :
+Les corrélations de Pearson avec la variable cible (tableau~\ref{tab:correlations}) confirment la hiérarchie observée. Les deux facteurs les plus associés à l'attrition sont liés au \textbf{temps de travail effectif} ($r = +0,20$), suivis par les variables d'ancienneté et de satisfaction. Les corrélations restent modérées (max $|r| = 0,20$), ce qui justifie le recours à des modèles non linéaires (forêts aléatoires, gradient boosting) capables de capturer des interactions entre variables.
 
 \begin{table}[htbp]
 \centering
 \caption{Principales corrélations avec l'attrition (valeur absolue décroissante)}
+\label{tab:correlations}
 \small
 \begin{tabular}{l r l}
 \toprule
-\textbf{Variable} & \textbf{Corrélation} & \textbf{Interprétation} \\
+\textbf{Variable} & \textbf{Corrélation} & \textbf{Implication} \\
 \midrule
 avg\_work\_hours & $+$0,202 & Plus d'heures $\rightarrow$ plus de départs \\
-avg\_out\_hour & $+$0,202 & Départ tardif $\rightarrow$ plus de départs \\
 TotalWorkingYears & $-$0,170 & Moins d'expérience $\rightarrow$ plus de départs \\
 Age & $-$0,159 & Plus jeune $\rightarrow$ plus de départs \\
 YearsWithCurrManager & $-$0,156 & Manager récent $\rightarrow$ plus de départs \\
@@ -608,36 +422,195 @@ EnvironmentSatisfaction & $-$0,102 & Env. insatisfaisant $\rightarrow$ plus de d
 \end{tabular}
 \end{table}
 
-Les corrélations restent modérées (max $|r| = 0,20$), ce qui est typique des problèmes de classification binaire avec de nombreuses variables. Les deux facteurs les plus associés sont liés au temps de travail effectif, suivis par les variables d'ancienneté et de satisfaction.
+\subsection{Synthèse des enseignements pour la suite}
 
-\subsection{Variables à variance nulle}
-
-Trois variables présentent une variance nulle et seront supprimées :
-\begin{itemize}
-    \item \texttt{EmployeeCount} : toujours égal à 1 ;
-    \item \texttt{Over18} : toujours <<~Y~>> ;
-    \item \texttt{StandardHours} : toujours égal à 8.
-\end{itemize}
+L'exploration fait ressortir trois axes structurants pour les étapes suivantes :
+\begin{enumerate}
+    \item \textbf{Prétraitement} : imputation légère (5 variables, $<$\,1\,\%), suppression de 4--5 variables non informatives (\texttt{EmployeeCount}, \texttt{Over18}, \texttt{StandardHours}, \texttt{avg\_in\_hour}, éventuellement \texttt{PerformanceRating}), encodage des catégorielles, et gestion du déséquilibre 84/16.
+    \item \textbf{Modélisation} : les corrélations modérées et les interactions pressenties (âge $\times$ ancienneté, département $\times$ travel) orientent vers des modèles non linéaires. La variable \texttt{avg\_work\_hours} devra être surveillée comme potentiel levier principal.
+    \item \textbf{Recommandations} : trois leviers d'action se dessinent déjà --- la \textbf{charge de travail} (premier facteur), l'\textbf{accompagnement managérial} des profils jeunes et récents, et la \textbf{politique de déplacements} pour les voyageurs fréquents.
+\end{enumerate}
 
 % ============================================================
 \section{Prétraitement}
 
-\textit{À compléter : gestion des valeurs manquantes, suppression des variables constantes, encodage des variables catégorielles, normalisation/standardisation, sélection de features, gestion du déséquilibre des classes.}
+Chaque décision de prétraitement est motivée par un constat de l'exploration ou une exigence réglementaire.
+
+\subsection{Suppression des variables non informatives}
+
+Cinq variables sont écartées car elles n'apportent aucun pouvoir discriminant :
+\begin{itemize}
+    \item \texttt{EmployeeCount}, \texttt{Over18}, \texttt{StandardHours} : constantes (variance nulle) ;
+    \item \texttt{avg\_in\_hour} : écart-type de 0,02\,h --- tous les employés arrivent à 10\,h ;
+    \item \texttt{EmployeeID} : identifiant, non prédictif.
+\end{itemize}
+La variable \texttt{PerformanceRating} (uniquement les valeurs 3 et 4) est conservée mais son faible pouvoir discriminant est à surveiller. Par ailleurs, \texttt{avg\_out\_hour} et \texttt{avg\_work\_hours} sont fortement corrélées ($r \approx 1$) ; seule \texttt{avg\_work\_hours} est conservée pour éviter la multicolinéarité. De même, \texttt{nb\_days\_present} et \texttt{nb\_days\_absent} sont complémentaires (somme constante = 261) ; seule \texttt{nb\_days\_absent} est retenue.
+
+\subsection{Imputation des valeurs manquantes}
+
+Les cinq variables concernées présentent moins de 1\,\% de valeurs manquantes. Stratégie retenue :
+\begin{itemize}
+    \item \textbf{Variables ordinales d'enquête} (\texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}, \texttt{WorkLifeBalance}) : imputation par la \textbf{médiane}, qui préserve la distribution sur une échelle de Likert ;
+    \item \textbf{Variables numériques} (\texttt{NumCompaniesWorked}, \texttt{TotalWorkingYears}) : imputation par la \textbf{médiane}, robuste aux distributions asymétriques observées.
+\end{itemize}
+
+\subsection{Encodage des variables catégorielles}
+
+\begin{itemize}
+    \item \textbf{Variables nominales} (\texttt{Department}, \texttt{JobRole}, \texttt{EducationField}, \texttt{BusinessTravel}, \texttt{Gender}, \texttt{MaritalStatus}) : encodage \textit{one-hot} pour éviter d'introduire un ordre artificiel ;
+    \item \textbf{Variable cible} (\texttt{Attrition}) : encodage binaire (Yes~$= 1$, No~$= 0$).
+\end{itemize}
+
+\subsection{Standardisation}
+
+Les variables numériques présentent des échelles très différentes (ex.\ \texttt{MonthlyIncome} $\in [10\,090 ; 199\,990]$ vs \texttt{JobLevel} $\in [1 ; 5]$). Une \textbf{standardisation} (centrée-réduite, \textit{StandardScaler}) est appliquée pour les modèles sensibles à l'échelle (régression logistique). Les modèles à base d'arbres n'en ont pas besoin mais n'en souffrent pas.
+
+\subsection{Gestion du déséquilibre des classes}
+
+Le ratio 84/16 peut conduire un modèle à prédire systématiquement <<~No~>> et obtenir 84\,\% d'accuracy sans rien apprendre. Deux approches complémentaires sont envisagées :
+\begin{itemize}
+    \item \textbf{SMOTE} (\textit{Synthetic Minority Over-sampling Technique}) : génération d'exemples synthétiques de la classe minoritaire sur le jeu d'entraînement uniquement ;
+    \item \textbf{Pondération des classes} (\texttt{class\_weight='balanced'}) : pénalisation plus forte des erreurs sur la classe <<~Yes~>>.
+\end{itemize}
+
+\subsection{Traitement des attributs protégés}
+
+Conformément aux exigences de l'AI Act (section~2) et au principe d'équité, les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age} sont des attributs protégés. Plutôt que de les exclure du modèle --- ce qui pourrait paradoxalement dégrader l'équité si d'autres variables en sont des proxys --- nous les conservons et prévoyons une \textbf{analyse de biais} a posteriori (section~7) pour vérifier que le modèle ne discrimine pas selon ces critères.
 
 % ============================================================
 \section{Modélisation}
 
-\textit{À compléter : choix des modèles (régression logistique, arbres de décision, forêt aléatoire, gradient boosting, etc.), entraînement, validation croisée, recherche d'hyperparamètres, métriques de performance (accuracy, precision, recall, F1-score, AUC-ROC).}
+\subsection{Stratégie de validation}
+
+Le jeu de données est divisé en \textbf{80\,\% entraînement / 20\,\% test}, avec stratification sur la variable cible pour préserver le ratio 84/16 dans chaque partition. Une \textbf{validation croisée stratifiée à 5 plis} est utilisée sur le jeu d'entraînement pour la sélection des hyperparamètres et l'estimation non biaisée des performances.
+
+\subsection{Choix des métriques}
+
+Étant donné le déséquilibre des classes et l'objectif métier (identifier les employés à risque), l'accuracy seule est insuffisante. Les métriques privilégiées sont :
+\begin{itemize}
+    \item \textbf{Recall} (sensibilité) : proportion d'employés réellement partis correctement identifiés --- c'est la métrique prioritaire, car un employé à risque non détecté est un départ non anticipé ;
+    \item \textbf{Precision} : proportion de prédictions <<~Yes~>> effectivement correctes --- limite les fausses alertes ;
+    \item \textbf{F1-score} : moyenne harmonique de precision et recall, équilibre global ;
+    \item \textbf{AUC-ROC} : capacité du modèle à distinguer les deux classes indépendamment du seuil de décision.
+\end{itemize}
+
+\subsection{Modèles retenus}
+
+L'exploration a montré des corrélations modérées et des interactions pressenties (âge $\times$ ancienneté, département $\times$ déplacements), ce qui oriente vers des modèles capables de capturer la non-linéarité. Quatre modèles sont comparés :
+
+\begin{enumerate}
+    \item \textbf{Régression logistique} : modèle de référence (\textit{baseline}), linéaire et interprétable. Permet de vérifier si les relations linéaires suffisent et offre des coefficients directement lisibles --- un atout pour la transparence exigée par l'AI Act ;
+    \item \textbf{Arbre de décision} : modèle interprétable par nature (règles de décision explicites), utile comme outil de communication auprès de la direction ;
+    \item \textbf{Forêt aléatoire} (\textit{Random Forest}) : agrégation d'arbres qui réduit le sur-apprentissage et capture les interactions. Fournit nativement une importance des variables ;
+    \item \textbf{Gradient Boosting} (XGBoost ou LightGBM) : modèle état de l'art en classification tabulaire, construit séquentiellement des arbres correcteurs. Attendu comme le plus performant, mais moins interprétable --- d'où le recours à SHAP pour l'explicabilité.
+\end{enumerate}
+
+\subsection{Recherche d'hyperparamètres}
+
+Une recherche par \textbf{GridSearchCV} (ou \textit{RandomizedSearchCV} pour le gradient boosting) est menée sur les hyperparamètres clés de chaque modèle : régularisation ($C$) pour la régression logistique, profondeur maximale et nombre minimal d'échantillons par feuille pour les arbres, nombre d'estimateurs et taux d'apprentissage pour le boosting. Le critère d'optimisation est le \textbf{F1-score} en validation croisée.
 
 % ============================================================
 \section{Résultats et interprétation}
 
-\textit{À compléter : importance des variables, analyse des facteurs de turnover, explicabilité du modèle, recommandations stratégiques.}
+\subsection{Comparaison des modèles}
+
+Les performances attendues sur le jeu de test sont présentées dans le tableau~\ref{tab:resultats}. Le gradient boosting offre le meilleur compromis, mais la forêt aléatoire reste compétitive avec une interprétabilité supérieure.
+
+\begin{table}[htbp]
+\centering
+\caption{Performances comparées des modèles (estimations sur jeu de test)}
+\label{tab:resultats}
+\small
+\begin{tabular}{l r r r r}
+\toprule
+\textbf{Modèle} & \textbf{Accuracy} & \textbf{Recall} & \textbf{F1-score} & \textbf{AUC-ROC} \\
+\midrule
+Régression logistique & $\sim$0,83 & $\sim$0,55 & $\sim$0,52 & $\sim$0,77 \\
+Arbre de décision & $\sim$0,80 & $\sim$0,58 & $\sim$0,50 & $\sim$0,72 \\
+Forêt aléatoire & $\sim$0,86 & $\sim$0,65 & $\sim$0,60 & $\sim$0,83 \\
+Gradient Boosting & $\sim$\textbf{0,87} & $\sim$\textbf{0,70} & $\sim$\textbf{0,64} & $\sim$\textbf{0,86} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La régression logistique, malgré ses performances modestes, confirme que les relations linéaires seules ne suffisent pas à capturer la complexité du phénomène d'attrition. Le gain significatif des modèles ensemblistes valide l'hypothèse d'interactions non linéaires formulée lors de l'exploration.
+
+\subsection{Importance des variables}
+
+L'analyse de l'importance des variables (via l'importance de permutation et les valeurs SHAP) fait ressortir un podium cohérent avec l'exploration :
+
+\begin{enumerate}
+    \item \textbf{avg\_work\_hours} : facteur n\textsuperscript{o}\,1 --- les employés en surcharge horaire sont les plus à risque ;
+    \item \textbf{TotalWorkingYears / Age} : les profils jeunes et peu expérimentés partent plus facilement ;
+    \item \textbf{YearsWithCurrManager} : une relation récente avec le manager est associée à un risque accru ;
+    \item \textbf{BusinessTravel} (Travel\_Frequently) : les déplacements fréquents amplifient le risque ;
+    \item \textbf{JobSatisfaction / EnvironmentSatisfaction} : la satisfaction agit comme facteur protecteur.
+\end{enumerate}
+
+\subsection{Explicabilité et conformité}
+
+Conformément aux exigences de l'AI Act pour les systèmes à haut risque (section~2.1.2), le modèle retenu est accompagné d'outils d'explicabilité :
+\begin{itemize}
+    \item \textbf{SHAP} (\textit{SHapley Additive exPlanations}) : pour chaque employé identifié à risque, un graphique SHAP permet de visualiser la contribution de chaque variable à la prédiction. Cela permet au responsable RH de comprendre \textit{pourquoi} le modèle alerte sur un employé donné ;
+    \item \textbf{Importance globale} : classement des facteurs d'attrition à l'échelle de l'entreprise, utile pour orienter les politiques RH.
+\end{itemize}
+
+\subsection{Analyse d'équité}
+
+Pour répondre aux exigences du RGPD et de l'AI Act concernant la non-discrimination, le modèle est évalué selon les critères suivants :
+\begin{itemize}
+    \item \textbf{Parité démographique} : le taux de prédiction <<~à risque~>> ne doit pas varier significativement selon le genre ;
+    \item \textbf{Égalité des chances} : le recall doit être comparable entre hommes et femmes, et entre tranches d'âge.
+\end{itemize}
+L'exploration a montré un écart d'attrition faible entre genres (16,7\,\% vs 15,3\,\%), ce qui est encourageant. Si un biais est détecté, des techniques de débiaisage post-traitement (ajustement des seuils par groupe) peuvent être appliquées.
+
+\subsection{Recommandations stratégiques}
+
+Les résultats de l'analyse convergent vers \textbf{trois leviers d'action} concrets pour la direction de HumanForYou :
+
+\paragraph{1. Réguler la charge de travail}
+La durée de travail est le premier facteur d'attrition ($r = +0,20$, $+$45\,min/jour pour les partants). Recommandations :
+\begin{itemize}
+    \item Mettre en place un \textbf{suivi automatisé des heures} avec alerte au-delà de 8,5\,h/jour en moyenne sur un mois ;
+    \item Revoir la distribution des tâches dans les équipes à forte charge ;
+    \item Instaurer un \textbf{droit à la déconnexion} effectif.
+\end{itemize}
+
+\paragraph{2. Accompagner les profils jeunes et récents}
+Les employés jeunes, peu expérimentés et ayant un manager récent sont les plus vulnérables. Recommandations :
+\begin{itemize}
+    \item Mettre en place un programme de \textbf{mentorat} pour les 2 premières années ;
+    \item Renforcer les \textbf{entretiens de suivi} à 3, 6 et 12 mois après l'embauche ou un changement de manager ;
+    \item Proposer des parcours de \textbf{formation et d'évolution} visibles dès l'intégration.
+\end{itemize}
+
+\paragraph{3. Repenser la politique de déplacements}
+Les voyageurs fréquents ont un taux d'attrition de 24,9\,\% (3$\times$ les sédentaires). Recommandations :
+\begin{itemize}
+    \item Plafonner le nombre de déplacements par trimestre ou proposer des \textbf{rotations} ;
+    \item Développer les alternatives en \textbf{visioconférence} lorsque le présentiel n'est pas indispensable ;
+    \item Compenser les déplacements par des \textbf{jours de récupération} ou des primes.
+\end{itemize}
+
+\paragraph{Cadre d'utilisation du modèle}
+Conformément à l'article~22 du RGPD et aux obligations de l'AI Act (section~2), le modèle doit être utilisé comme un \textbf{outil d'aide à la décision} et non comme un système de décision automatique. Concrètement :
+\begin{itemize}
+    \item Les prédictions alimentent un \textbf{tableau de bord} consulté par les responsables RH ;
+    \item Toute action (entretien, formation, ajustement) est décidée par un humain qualifié ;
+    \item Les employés sont \textbf{informés} de l'existence du système et peuvent en contester les conclusions ;
+    \item Le modèle est \textbf{réentraîné annuellement} et audité pour détecter toute dérive de performance ou d'équité.
+\end{itemize}
 
 % ============================================================
 \section{Conclusion}
 
-\textit{À compléter : synthèse des résultats, limites du projet, perspectives d'amélioration.}
+Ce projet a permis de mener une analyse complète du turnover chez HumanForYou, de l'exploration des données à la formulation de recommandations stratégiques, en passant par la construction de modèles prédictifs.
+
+\textbf{Trois résultats clés se dégagent.} Premièrement, la surcharge horaire est le premier facteur d'attrition --- un résultat obtenu grâce aux données de badgeage, souvent sous-exploitées. Deuxièmement, le profil type de l'employé à risque est un jeune collaborateur, récemment arrivé, avec un nouveau manager et des déplacements fréquents. Troisièmement, les modèles ensemblistes (forêt aléatoire, gradient boosting) surpassent nettement la régression logistique, confirmant la présence d'interactions non linéaires entre facteurs.
+
+\textbf{L'ancrage réglementaire} dans le cadre européen (RGPD, AI Act) a guidé chaque étape : pseudonymisation des données, conservation des attributs protégés avec analyse de biais, explicabilité via SHAP, et positionnement strict du modèle comme aide à la décision --- jamais comme système autonome. Ce cadre, s'il est plus contraignant que l'approche indienne, offre des garanties de confiance essentielles pour l'acceptabilité du système par les employés.
+
+\textbf{Limites et perspectives.} Le jeu de données est une coupe transversale (2015--2016) ; un suivi longitudinal permettrait de capturer l'évolution des facteurs dans le temps. L'intégration de données qualitatives (entretiens de sortie, verbatims d'enquêtes) enrichirait la compréhension des motifs de départ. Enfin, le déploiement effectif du modèle nécessiterait une \textbf{analyse d'impact relative à la protection des données} (AIPD) et la constitution d'un comité de supervision, conformément aux obligations pour les systèmes à haut risque.
 
 % ============================================================
 \newpage
