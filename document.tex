@@ -314,49 +314,157 @@ Dans le contexte RH de HumanForYou, nous privilégions l'\textbf{égalité des c
 % ------------------------------------------------------------
 \subsection{Décisions et règles adoptées pour le projet}
 
-À la lumière du cadre réglementaire (RGPD, AI Act), des principes éthiques et des exigences d'équité, nous formulons ci-dessous les \textbf{décisions structurantes} et les \textbf{règles} que nous nous engageons à suivre tout au long de ce projet.
+À la lumière du cadre réglementaire (RGPD, AI Act) et des sept principes éthiques du HLEG, nous structurons ci-dessous les \textbf{décisions} et les \textbf{règles} que nous nous engageons à suivre tout au long de ce projet, en les organisant selon les sept exigences pour une IA digne de confiance \cite{eu_hleg, ia_act}.
 
-\subsubsection{Positionnement du système}
+% ---- 2.4.1 Respect de l'autonomie humaine ----
+\subsubsection{Respect de l'autonomie humaine}
 
+\paragraph{Principe général}
+Le HLEG définit cette exigence comme suit : <<~les systèmes d'IA sont développés et utilisés comme un outil au service des personnes, qui respecte la dignité humaine et l'autonomie personnelle, et qui fonctionne d'une manière qui peut être contrôlée et supervisée de manière appropriée par les êtres humains~>> \cite{ia_act}. L'article~22 du RGPD interdit les décisions fondées exclusivement sur un traitement automatisé produisant des effets juridiques ou significatifs. La CNIL insiste sur la nécessité de <<~concevoir des systèmes au service de la liberté humaine~>> \cite{cnil_ethique}, tandis que le rapport Villani prône la <<~complémentarité homme-machine~>> \cite{villani}.
+
+\paragraph{Application à notre projet}
+Le modèle de prédiction de l'attrition est strictement positionné comme un \textbf{outil d'aide à la décision}. Aucune action RH (entretien, formation, mobilité, ajustement salarial) ne pourra être déclenchée automatiquement par une prédiction du modèle. Le système a pour unique finalité l'\textbf{amélioration de la rétention des talents et des conditions de travail}. Il est interdit de l'utiliser à des fins de surveillance, de sanction, de classement des employés ou de justification de licenciements.
+
+\paragraph{Mise en \oe uvre concrète}
 \begin{enumerate}
-    \item \textbf{Aide à la décision, jamais décision automatique.} Conformément à l'article 22 du RGPD et à l'article 14 de l'AI Act, le modèle de prédiction de l'attrition est strictement positionné comme un \textbf{outil d'aide à la décision}. Aucune action RH (entretien, formation, mobilité, ajustement salarial) ne pourra être déclenchée automatiquement par une prédiction du modèle. Toute décision implique l'intervention d'un responsable RH qualifié.
-    \item \textbf{Finalité légitime et explicite.} Le système a pour unique finalité l'\textbf{amélioration de la rétention des talents et des conditions de travail}. Il est interdit de l'utiliser à des fins de surveillance, de sanction, de classement des employés ou de justification de licenciements.
-    \item \textbf{Information des employés.} Conformément au principe de transparence du RGPD, les employés doivent être informés de l'existence du système, de sa finalité, des données utilisées et de leur droit de contestation.
+    \item \textbf{Validation humaine obligatoire.} Toute prédiction d'attrition doit être examinée par un responsable RH qualifié avant qu'une quelconque action ne soit envisagée. Le modèle produit un score de risque et des facteurs explicatifs, mais c'est le responsable RH qui décide de la suite à donner (entretien, proposition de formation, ajustement de poste).
+    \item \textbf{Charte d'utilisation.} Nous rédigerons une charte définissant les usages autorisés et interdits du système, signée par tous les utilisateurs ayant accès au tableau de bord de prédiction.
+    \item \textbf{Tableau de bord consultatif.} L'interface de restitution des résultats sera conçue comme un outil de consultation (alertes, visualisations, facteurs SHAP) et non comme un système de notification automatique déclenchant des workflows RH.
+    \item \textbf{Information préalable des employés.} Conformément au RGPD, les employés seront informés de l'existence du système, de sa finalité, des données utilisées et de leur droit d'opposition, via une note d'information claire et accessible.
 \end{enumerate}
 
-\subsubsection{Règles de traitement des données}
+\paragraph{Illustration par les données}
+Le jeu de données contient des variables d'évaluation managériale (\texttt{PerformanceRating}, \texttt{JobInvolvement}) attribuées par des êtres humains, non par un algorithme. Sur les 4\,410 employés, 84,7\,\% des évaluations de performance attribuent un score de~3 (<<~excellent~>>), ce qui montre que ces jugements sont déjà le fruit d'une appréciation humaine. Le modèle ne remplace pas ce jugement : il le complète en identifiant des signaux faibles de départ que le manager peut ensuite contextualiser.
 
+% ---- 2.4.2 Robustesse technique et sécurité ----
+\subsubsection{Robustesse technique et sécurité}
+
+\paragraph{Principe général}
+Le HLEG exige que <<~les systèmes d'IA soient développés et utilisés d'une manière qui permet la robustesse en cas de problèmes et la résilience contre les tentatives d'altérer l'utilisation ou la performance du système, de manière à minimiser les dommages involontaires~>> \cite{ia_act}. Le guide de sécurité de la CNIL \cite{cnil_securite} décline cette exigence en mesures concrètes de protection des données. La CNIL recommande également de <<~former à l'éthique tous les acteurs de la chaîne algorithmique~>> pour réduire les risques d'erreur \cite{cnil_ethique}.
+
+\paragraph{Application à notre projet}
+La robustesse technique se traduit par plusieurs règles de conception et de validation du pipeline de données et de modélisation.
+
+\paragraph{Mise en \oe uvre concrète}
 \begin{enumerate}
-    \item \textbf{Minimisation.} Seules les variables strictement nécessaires à la prédiction sont conservées. Les variables constantes, redondantes ou non informatives sont supprimées dès le prétraitement.
-    \item \textbf{Pseudonymisation.} Les données sont manipulées via des identifiants numériques (\texttt{EmployeeID}). Aucune donnée nominative (nom, prénom, adresse) n'est utilisée ni stockée dans le cadre du projet.
-    \item \textbf{Conservation limitée.} Les données et le modèle sont conservés uniquement pour la durée nécessaire à l'analyse. Tout déploiement opérationnel nécessiterait une \textbf{analyse d'impact relative à la protection des données} (AIPD) préalable.
-    \item \textbf{Pas de données sensibles au sens du RGPD.} Le jeu de données ne contient pas de catégories de données sensibles (origines ethniques, opinions politiques, données de santé). Les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age}, bien qu'elles soient des attributs protégés, ne sont pas des données sensibles au sens de l'article 9 du RGPD.
+    \item \textbf{Validation croisée stratifiée.} Le jeu de données étant déséquilibré (16\,\% d'attrition), nous utiliserons une validation croisée stratifiée (5 ou 10 folds) pour garantir que chaque fold conserve la même proportion de classes. Cela évite le surapprentissage sur la classe majoritaire et assure une estimation fiable des performances.
+    \item \textbf{Traitement rigoureux des valeurs manquantes.} Les 111 valeurs manquantes identifiées sur 5 variables (\texttt{NumCompaniesWorked}, \texttt{TotalWorkingYears}, \texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}, \texttt{WorkLifeBalance}) seront imputées par la médiane (variables numériques) ou le mode (variables catégorielles), avec documentation du choix et de son impact sur les résultats.
+    \item \textbf{Suppression des variables constantes.} Les variables \texttt{EmployeeCount}~(=~1), \texttt{Over18}~(=~Y) et \texttt{StandardHours}~(=~8) sont supprimées dès le prétraitement car elles n'apportent aucune information discriminante mais pourraient introduire du bruit.
+    \item \textbf{Agrégation robuste des données de badgeage.} Plutôt que d'utiliser les 365 horodatages bruts (sujets aux valeurs manquantes ponctuelles), nous dérivons des variables agrégées (\texttt{avg\_work\_hours}, \texttt{std\_work\_hours}, \texttt{nb\_days\_absent}) qui résistent aux absences ponctuelles.
+    \item \textbf{Documentation des limites.} Le caractère transversal des données (coupe 2015--2016) est explicitement documenté comme limite : le modèle ne capture pas l'évolution temporelle des facteurs d'attrition, ce qui réduit sa fiabilité pour un déploiement à long terme sans réentraînement.
 \end{enumerate}
 
-\subsubsection{Règles d'équité et de non-discrimination}
+\paragraph{Illustration par les données}
+Les données de badgeage (\texttt{in\_time.csv}, \texttt{out\_time.csv}) couvrent 365 jours de l'année 2015 pour chacun des 4\,410 employés. Des valeurs \texttt{NA} sont présentes lorsqu'un employé est absent, ce qui nécessite un traitement robuste : nous dérivons des variables agrégées (\texttt{avg\_work\_hours}, \texttt{std\_work\_hours}, \texttt{nb\_days\_absent}) plutôt que d'utiliser les horodatages bruts, ce qui rend le modèle plus résilient aux données manquantes ponctuelles.
 
+% ---- 2.4.3 Confidentialité et gouvernance des données ----
+\subsubsection{Confidentialité et gouvernance des données}
+
+\paragraph{Principe général}
+Le HLEG exige que <<~les systèmes d'IA soient développés et utilisés conformément aux règles de protection de la vie privée et des données, tout en traitant des données qui répondent à des normes élevées en termes de qualité et d'intégrité~>> \cite{ia_act}. Le RGPD impose les principes de minimisation des données (article~5), de pseudonymisation et de conservation limitée. La CNIL recommande de <<~constituer une plateforme nationale d'audit des algorithmes~>> pour vérifier la conformité des traitements \cite{cnil_ethique}. Le rapport Villani souligne l'importance d'une <<~politique économique centrée sur les données~>> comme fondement stratégique \cite{villani}.
+
+\paragraph{Application à notre projet}
+Le traitement des données RH impose des mesures strictes de protection de la vie privée et de gouvernance de la qualité des données.
+
+\paragraph{Mise en \oe uvre concrète}
 \begin{enumerate}
-    \item \textbf{Conservation des attributs protégés.} Les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age} sont conservées dans le modèle plutôt que supprimées. Leur suppression pourrait paradoxalement dégrader l'équité si d'autres variables en sont des proxys (\texttt{MonthlyIncome} comme proxy du genre, par exemple).
-    \item \textbf{Audit d'équité systématique.} Après entraînement, le modèle est évalué selon les métriques d'égalité des chances : le recall et le taux de faux positifs sont comparés entre genres et entre tranches d'âge. Un écart supérieur à 5 points de pourcentage déclenchera une investigation.
-    \item \textbf{Débiaisage si nécessaire.} Si un biais significatif est détecté, des techniques de correction post-traitement (ajustement des seuils de décision par groupe) seront appliquées, en privilégiant les méthodes qui ne dégradent pas la performance globale.
+    \item \textbf{Minimisation des données.} Nous supprimons dès le prétraitement toute variable non nécessaire à la prédiction : les variables constantes (\texttt{EmployeeCount}~=~1, \texttt{Over18}~=~Y, \texttt{StandardHours}~=~8) ainsi que toute variable redondante identifiée par analyse de corrélation. Le jeu de données final ne conserve que les variables ayant un pouvoir prédictif démontré.
+    \item \textbf{Pseudonymisation native.} Les données sont manipulées exclusivement via l'identifiant numérique \texttt{EmployeeID}. Aucune donnée nominative (nom, prénom, adresse, numéro de téléphone) n'est présente ni dans les fichiers sources ni dans les sorties du modèle. En cas de déploiement, aucune table de correspondance \texttt{EmployeeID} $\leftrightarrow$ identité ne sera accessible aux opérateurs du modèle.
+    \item \textbf{Conservation limitée.} Les données et le modèle sont conservés uniquement pour la durée de l'analyse académique. Tout déploiement opérationnel nécessiterait une \textbf{analyse d'impact relative à la protection des données} (AIPD) préalable, conformément à l'article~35 du RGPD.
+    \item \textbf{Contrôle de qualité des données.} Avant toute modélisation, nous documenterons un rapport de qualité des données : taux de valeurs manquantes par variable, distributions atypiques, et vérification de la cohérence entre les quatre sources (données générales, enquêtes, évaluations, badgeage).
+    \item \textbf{Vérification de l'absence de données sensibles.} Nous confirmons que le jeu de données ne contient aucune catégorie de données sensibles au sens de l'article~9 du RGPD (origines ethniques, opinions politiques, données de santé, orientation sexuelle). Les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age}, bien qu'elles soient des attributs protégés, ne relèvent pas de l'article~9.
 \end{enumerate}
 
-\subsubsection{Règles de transparence et d'explicabilité}
+\paragraph{Illustration par les données}
+Le jeu de données comprend 35 variables dans sa version fusionnée. Parmi celles-ci, les données salariales (\texttt{MonthlyIncome}), les évaluations de satisfaction (\texttt{JobSatisfaction}, \texttt{EnvironmentSatisfaction}) et les horaires de badgeage constituent des données personnelles relevant du RGPD. Cependant, l'identification directe est impossible : seul un identifiant numérique (\texttt{EmployeeID} de 1 à 4\,410) est utilisé, sans table de correspondance avec des données nominatives. La gouvernance des données impose de vérifier la qualité : nous avons identifié 111 valeurs manquantes réparties sur \texttt{NumCompaniesWorked} (19), \texttt{TotalWorkingYears} (9), \texttt{EnvironmentSatisfaction} (25), \texttt{JobSatisfaction} (20) et \texttt{WorkLifeBalance} (38).
 
+% ---- 2.4.4 Transparence ----
+\subsubsection{Transparence}
+
+\paragraph{Principe général}
+Le HLEG définit la transparence comme l'obligation de développer des systèmes d'IA <<~de manière à permettre une traçabilité et une explicabilité appropriées, tout en faisant prendre conscience aux humains qu'ils communiquent ou interagissent avec un système d'IA, ainsi qu'en informant dûment les déployeurs des capacités et des limites de ce système et les personnes concernées de leurs droits~>> \cite{ia_act}. La CNIL appelle à <<~rendre les systèmes algorithmiques compréhensibles~>> \cite{cnil_ethique}. Le Centre de politique européenne rappelle que la transparence est un prérequis pour la confiance dans les systèmes d'IA \cite{cep_ethique}.
+
+\paragraph{Application à notre projet}
+La transparence est essentielle pour que les responsables RH puissent faire confiance aux prédictions et que les employés comprennent comment le système les concerne.
+
+\paragraph{Mise en \oe uvre concrète}
 \begin{enumerate}
-    \item \textbf{Explicabilité individuelle.} Pour chaque employé identifié comme <<~à risque~>>, le système fournit une explication des facteurs ayant contribué à la prédiction (via SHAP), permettant au responsable RH de comprendre et de contextualiser l'alerte.
-    \item \textbf{Explicabilité globale.} Un classement des facteurs d'attrition à l'échelle de l'entreprise est produit, permettant d'orienter les politiques RH structurelles.
-    \item \textbf{Documentation complète.} Conformément à l'AI Act, le système est accompagné d'une documentation technique décrivant les données utilisées, les choix de modélisation, les performances obtenues et les limites identifiées.
+    \item \textbf{Explicabilité individuelle via SHAP.} Pour chaque employé identifié comme <<~à risque~>>, nous générerons un graphique SHAP (\textit{waterfall plot}) montrant la contribution de chaque variable à la prédiction. Le responsable RH pourra ainsi voir, par exemple, que le risque de départ d'un employé est principalement lié à ses heures de travail excessives et à un faible score de satisfaction, plutôt qu'à son âge ou son genre.
+    \item \textbf{Explicabilité globale.} Nous produirons un classement global des facteurs d'attrition (\textit{SHAP summary plot}) à l'échelle de l'entreprise, permettant à la direction RH d'identifier les leviers structurels (conditions de travail, politique salariale, management) sur lesquels agir en priorité.
+    \item \textbf{Documentation technique complète.} Conformément à l'AI Act, nous livrerons une documentation décrivant : (a) les données utilisées et leur provenance, (b) les choix de prétraitement et de modélisation, (c) les performances obtenues (accuracy, recall, precision, F1, AUC) et leur interprétation, (d) les limites identifiées et les conditions de validité du modèle.
+    \item \textbf{Information des employés.} Une note d'information rédigée en langage clair sera mise à disposition de tous les employés, précisant : l'existence du système, sa finalité (amélioration des conditions de travail), les catégories de données utilisées, les droits de la personne (accès, rectification, opposition, explication) et les coordonnées du responsable du traitement.
+    \item \textbf{Traçabilité du pipeline.} Chaque étape du traitement (fusion des sources, imputation des valeurs manquantes, encodage des variables catégorielles, entraînement, évaluation) sera documentée et reproductible via des scripts versionnés, permettant un audit technique complet.
 \end{enumerate}
 
-\subsubsection{Règles de gouvernance et de supervision}
+\paragraph{Illustration par les données}
+Le jeu de données repose sur quatre sources distinctes : données générales (24 variables), enquête de satisfaction employé (3 variables sur échelle de Likert 1--4), évaluation managériale (2 variables) et données de badgeage (365 jours d'horodatages). La transparence exige de documenter chaque étape de fusion de ces sources, les choix d'agrégation (par exemple, la transformation de 365 horodatages en \texttt{avg\_work\_hours} et \texttt{nb\_days\_absent}) et les éventuelles pertes d'information associées. Le fait que l'échelle de satisfaction aille de 1 (<<~Low~>>) à 4 (<<~Very High~>>) doit être explicité pour que les destinataires des prédictions puissent interpréter les facteurs SHAP.
 
+% ---- 2.4.5 Diversité, non-discrimination et équité ----
+\subsubsection{Diversité, non-discrimination et équité}
+
+\paragraph{Principe général}
+Le HLEG exige que les systèmes d'IA soient <<~développés et utilisés de manière à inclure divers acteurs et à promouvoir l'égalité d'accès, l'égalité des sexes et la diversité culturelle, tout en évitant les effets discriminatoires et les préjugés injustes interdits par le droit de l'Union ou le droit national~>> \cite{ia_act}. Le rapport Villani inscrit l'\textbf{inclusivité et la diversité} comme dimension transversale de la stratégie nationale en IA \cite{villani}. Le Hub France IA propose des méthodologies concrètes d'audit d'équité \cite{hub_france}, et Quantmetry détaille les métriques d'équité algorithmique (parité démographique, égalité des chances, calibration) \cite{quantmetry}.
+
+\paragraph{Application à notre projet}
+Les données présentent des déséquilibres structurels (genre, âge, statut marital) que le modèle pourrait reproduire ou amplifier. Nous mettons en place un cadre d'équité systématique.
+
+\paragraph{Mise en \oe uvre concrète}
 \begin{enumerate}
-    \item \textbf{Supervision humaine continue.} Les prédictions alimentent un tableau de bord consulté par les responsables RH. Le modèle ne déclenche aucune action automatique.
-    \item \textbf{Réentraînement et audit périodique.} En cas de déploiement opérationnel, le modèle doit être réentraîné annuellement et audité pour détecter toute dérive de performance ou d'équité (\textit{model drift}).
-    \item \textbf{Droit de contestation.} Tout employé doit pouvoir demander une explication de sa classification et contester les conclusions du système auprès d'un interlocuteur humain.
-    \item \textbf{Comité de supervision.} Le déploiement opérationnel du système nécessiterait la constitution d'un comité de supervision incluant des représentants RH, des représentants du personnel et un référent éthique.
+    \item \textbf{Conservation des attributs protégés pour audit.} Les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age} sont conservées dans le modèle plutôt que supprimées. Leur suppression pourrait paradoxalement dégrader l'équité si d'autres variables en sont des proxys (par exemple, \texttt{MonthlyIncome} corrélé au genre, ou \texttt{TotalWorkingYears} corrélé à l'âge). En les conservant, nous pouvons explicitement mesurer et contrôler leur influence.
+    \item \textbf{Audit d'équité systématique post-entraînement.} Après chaque entraînement, nous calculerons les métriques d'équité suivantes, ventilées par genre (Male/Female), par tranche d'âge (18--30, 31--40, 41--50, 51+) et par statut marital (Single, Married, Divorced) :
+    \begin{itemize}
+        \item \textit{Recall} (taux de vrais positifs) par sous-groupe ;
+        \item \textit{Taux de faux positifs} par sous-groupe ;
+        \item \textit{Parité démographique} : proportion de prédictions positives par sous-groupe.
+    \end{itemize}
+    Un écart supérieur à \textbf{5 points de pourcentage} entre sous-groupes sur l'une de ces métriques déclenchera une investigation formelle.
+    \item \textbf{Débiaisage post-traitement si nécessaire.} Si un biais significatif est détecté, nous appliquerons un ajustement des seuils de décision par sous-groupe (\textit{threshold adjustment}), méthode qui corrige les disparités sans modifier le modèle lui-même. Si cette approche est insuffisante, nous envisagerons un rééchantillonnage (\textit{oversampling} de la classe minoritaire dans le sous-groupe défavorisé) ou une régularisation du modèle pénalisant les disparités.
+    \item \textbf{Analyse des proxys.} Nous vérifierons par analyse de corrélation et par SHAP que les variables non protégées (comme \texttt{MonthlyIncome}, \texttt{JobLevel}, \texttt{Department}) ne servent pas de proxys discriminatoires pour les attributs protégés. Si une variable non protégée est fortement corrélée à un attribut protégé \textit{et} contribue de manière disproportionnée aux prédictions, elle sera signalée et son rôle sera examiné.
 \end{enumerate}
+
+\paragraph{Illustration par les données}
+Les données révèlent des disparités qu'un modèle non audité pourrait reproduire ou amplifier. Le taux d'attrition varie selon le genre (15,3\,\% pour les femmes contre 16,7\,\% pour les hommes), le statut marital (25,5\,\% pour les célibataires contre 10,1\,\% pour les divorcés) et l'âge (25,9\,\% pour les 18--30 ans contre 10,6\,\% pour les 41--50 ans). La répartition par genre est déséquilibrée (2\,646 hommes, 1\,764 femmes, soit 60/40), tandis que les revenus moyens sont proches (65\,319 pour les hommes, 64\,595 pour les femmes). Le département <<~Human Resources~>> affiche un taux d'attrition de 30,2\,\%, nettement supérieur aux autres départements (15\,\%). Ces déséquilibres justifient l'audit d'équité systématique inscrit dans nos règles.
+
+% ---- 2.4.6 Bien-être environnemental et sociétal ----
+\subsubsection{Bien-être environnemental et sociétal}
+
+\paragraph{Principe général}
+Le HLEG exige que les systèmes d'IA soient <<~développés et utilisés d'une manière durable et respectueuse de l'environnement, ainsi que dans l'intérêt de tous les êtres humains, tout en surveillant et en évaluant les incidences à long terme sur l'individu, la société et la démocratie~>> \cite{ia_act}. Le rapport Villani identifie les <<~enjeux écologiques~>> comme dimension transversale et insiste sur l'anticipation des impacts sur l'emploi et la <<~cohésion sociale~>> \cite{villani}. La CNIL rappelle que <<~tous les algorithmes doivent servir les intérêts des utilisateurs, en tant que citoyens et communautés~>>, au-delà de leur statut de consommateurs \cite{cnil_ethique}.
+
+\paragraph{Application à notre projet}
+Le bien-être sociétal est au c\oe ur de la finalité du système : il vise à améliorer les conditions de travail et la rétention des talents, et non à maximiser la productivité au détriment des employés.
+
+\paragraph{Mise en \oe uvre concrète}
+\begin{enumerate}
+    \item \textbf{Orientation vers les leviers d'amélioration.} Les recommandations issues du modèle cibleront exclusivement des \textbf{actions positives} : propositions de formation, ajustement de la charge de travail, amélioration des conditions d'environnement, mobilité interne. Le système ne sera jamais utilisé pour identifier des individus à sanctionner, surveiller ou licencier.
+    \item \textbf{Suivi des indicateurs de bien-être.} Les variables de satisfaction (\texttt{WorkLifeBalance}, \texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}) et les données de charge de travail (\texttt{avg\_work\_hours}, \texttt{std\_work\_hours}) seront utilisées non seulement comme prédicteurs mais aussi comme \textbf{indicateurs de suivi} : une dégradation globale de ces scores signalera un problème organisationnel nécessitant une action structurelle, au-delà du cas individuel.
+    \item \textbf{Empreinte environnementale maîtrisée.} L'impact environnemental est limité par le choix de modèles légers (forêts aléatoires, gradient boosting) ne nécessitant pas d'infrastructure GPU intensive, et par l'utilisation d'un jeu de données de taille modeste (4\,410 observations, 35 variables). En cas de déploiement, le réentraînement annuel (plutôt que continu) limitera la consommation de ressources de calcul.
+    \item \textbf{Évaluation de l'impact sociétal.} Avant tout déploiement opérationnel, une évaluation de l'impact du système sur les relations de travail sera conduite : le système ne doit pas générer de climat de surveillance ou de méfiance entre employés et management. Les représentants du personnel seront consultés pour valider l'acceptabilité du dispositif.
+\end{enumerate}
+
+\paragraph{Illustration par les données}
+Les données de satisfaction (\texttt{WorkLifeBalance}, \texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}) mesurent directement le bien-être des employés. Sur les 4\,410 employés, 239 (5,4\,\%) déclarent un équilibre vie professionnelle-vie personnelle <<~Low~>> (score de~1) et 1\,019 (23,1\,\%) un score de~2. Les heures de travail dérivées du badgeage (\texttt{avg\_work\_hours}, \texttt{std\_work\_hours}) permettent de détecter des situations de surcharge. Le modèle peut ainsi contribuer à identifier les populations les plus exposées au mal-être professionnel, à condition que les recommandations qui en découlent servent l'amélioration des conditions de travail.
+
+% ---- 2.4.7 Responsabilité ----
+\subsubsection{Responsabilité}
+
+\paragraph{Principe général}
+Le HLEG exige la <<~mise en \oe uvre de mécanismes garantissant la responsabilité et l'obligation de rendre des comptes pour les systèmes d'IA et leurs résultats~>> \cite{ia_act}. La CNIL insiste sur la <<~vigilance et la réflexivité~>> : un <<~questionnement régulier et méthodique des systèmes algorithmiques par tous les acteurs (concepteurs, entreprises, citoyens)~>> \cite{cnil_ethique}. Elle recommande de <<~renforcer la fonction éthique dans les entreprises~>> et de <<~constituer une plateforme nationale d'audit des algorithmes~>> \cite{cnil_ethique}. Les lignes directrices de la Commission européenne soulignent l'importance de la traçabilité pour la reddition de comptes \cite{ec_lignes_directrices}.
+
+\paragraph{Application à notre projet}
+La responsabilité exige des mécanismes concrets de reddition de comptes, de traçabilité et de recours pour les personnes concernées.
+
+\paragraph{Mise en \oe uvre concrète}
+\begin{enumerate}
+    \item \textbf{Supervision humaine continue.} Les prédictions alimentent un tableau de bord consultatif accessible aux responsables RH. Le modèle ne déclenche aucune action automatique. Chaque consultation du tableau de bord et chaque décision prise à la suite d'une alerte seront journalisées pour assurer la traçabilité des usages.
+    \item \textbf{Réentraînement et audit périodique.} En cas de déploiement opérationnel, le modèle sera réentraîné annuellement sur les données les plus récentes. Un audit complet sera conduit à chaque cycle : performances (accuracy, recall, F1), équité (métriques ventilées par genre, âge, statut), et dérive (\textit{model drift}) par comparaison des distributions d'entrée et de sortie entre périodes.
+    \item \textbf{Droit de contestation individuel.} Tout employé pourra demander une explication de sa classification via un interlocuteur humain désigné (responsable RH ou référent éthique). La procédure de contestation sera documentée et accessible. En cas de contestation, le système produira un rapport SHAP individuel détaillant les facteurs ayant contribué à la prédiction.
+    \item \textbf{Comité de supervision.} Le déploiement opérationnel nécessitera la constitution d'un comité de supervision incluant : des représentants RH, des représentants du personnel, un référent éthique et, si possible, un profil technique capable d'auditer le modèle. Ce comité se réunira au minimum une fois par semestre pour examiner les résultats, les contestations et les éventuels biais détectés.
+    \item \textbf{Registre des traitements.} Conformément à l'article~30 du RGPD, un registre des traitements sera tenu, documentant : la finalité du système, les catégories de données traitées, les destinataires des résultats, les durées de conservation et les mesures de sécurité appliquées.
+\end{enumerate}
+
+\paragraph{Illustration par les données}
+La traçabilité s'appuie sur la clé \texttt{EmployeeID} qui permet de relier chaque prédiction à son dossier source, sans rompre la pseudonymisation. Les quatre sources de données (données générales, enquête employé, évaluation managériale, badgeage) sont fusionnées via cette clé, ce qui garantit l'auditabilité complète du pipeline. En cas de contestation, il est possible de retrouver pour chaque individu les valeurs exactes ayant alimenté le modèle : par exemple, pour l'employé~2 (femme, célibataire, 31 ans, \texttt{Research Scientist}, revenu de 41\,890, satisfaction environnement de~3, équilibre vie pro de~4), le système peut expliquer via SHAP quels facteurs ont conduit à la prédiction <<~Yes~>> (attrition).
 
 % ------------------------------------------------------------
 \subsection{Application au projet HumanForYou sous le cadre européen}
