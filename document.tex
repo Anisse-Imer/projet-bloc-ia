@@ -16,8 +16,14 @@
 \usepackage{caption}
 \usepackage{eurosym}
 \usepackage{multirow}
+\usepackage{tocloft}
 
 \geometry{margin=2.5cm}
+
+% Reduce TOC spacing to fit on one page
+\setlength{\cftbeforesecskip}{2pt}
+\setlength{\cftbeforesubsecskip}{1pt}
+\setlength{\cftbeforesubsubsecskip}{0pt}
 
 \hypersetup{
     colorlinks=true,
@@ -48,13 +54,89 @@
 \maketitle
 \thispagestyle{empty}
 \newpage
+{\small
 \tableofcontents
+}
 \newpage
 
 % ============================================================
 \section{Introduction}
 
 L'entreprise \textbf{HumanForYou}, acteur du secteur des ressources humaines basé en Inde, fait face à un taux de turnover préoccupant parmi ses employés. Dans un contexte où la rétention des talents constitue un enjeu stratégique majeur, la direction souhaite exploiter les données RH disponibles pour comprendre les facteurs de départ et anticiper les risques d'attrition.
+
+Avant de présenter les objectifs du projet, il est essentiel de comprendre \textit{pourquoi} l'utilisation de l'IA dans les ressources humaines est aujourd'hui encadrée par des législations strictes. Cette réglementation n'est pas née dans un vide : elle est le fruit d'une histoire jalonnée de dérives, de scandales et de prises de conscience progressives.
+
+\subsection{Contexte historique : des dérives aux législations}
+
+La réglementation qui encadre aujourd'hui l'intelligence artificielle et la protection des données n'est pas apparue spontanément. Elle est le produit d'une histoire de plus de cinquante ans, faite de projets ambitieux qui ont dérapé, de scandales qui ont choqué l'opinion, et de prises de conscience successives. Chaque étape a nourri la suivante, dessinant progressivement le cadre juridique dans lequel notre projet s'inscrit.
+
+\subsubsection{Tout commence par les fichiers : la naissance de la méfiance (années 1970)}
+
+L'histoire débute bien avant l'intelligence artificielle, à une époque où l'informatique commence tout juste à s'imposer dans les administrations. En 1974, la France découvre le projet \textbf{SAFARI} (Système Automatisé pour les Fichiers Administratifs et le Répertoire des Individus) : le gouvernement prévoit d'interconnecter l'ensemble des fichiers administratifs français --- impôts, sécurité sociale, police, état civil --- via le numéro de sécurité sociale. L'ambition est de <<~rationaliser~>> la gestion publique, mais le résultat serait un fichage complet de chaque citoyen.
+
+Le journal \textit{Le Monde} titre <<~SAFARI ou la chasse aux Français~>>, et l'indignation est immédiate. Ce scandale conduit directement à l'adoption de la \textbf{loi Informatique et Libertés} du 6 janvier 1978 et à la création de la \textbf{CNIL} --- l'une des premières autorités de protection des données au monde. Le message est clair : même avec de bonnes intentions, le croisement massif de données personnelles représente une menace pour les libertés individuelles.
+
+Ce premier avertissement pose un principe qui traversera les décennies suivantes : \textit{ce n'est pas parce qu'on peut collecter et croiser des données qu'on doit le faire}.
+
+\subsubsection{La surveillance à l'ère numérique : quand les États dépassent les bornes (2001--2013)}
+
+Trente ans plus tard, la même question resurgit à une tout autre échelle. Après les attentats du 11 septembre 2001, le Pentagone lance le programme \textbf{Total Information Awareness} (TIA), qui vise à croiser massivement les données personnelles --- transactions bancaires, communications, déplacements --- pour détecter les menaces terroristes avant qu'elles ne se concrétisent. Le programme est officiellement abandonné en 2003 face à la pression du Congrès américain, qui y voit les prémices d'un État de surveillance.
+
+Mais l'histoire ne s'arrête pas là. En 2013, Edward Snowden révèle que la NSA a poursuivi cette logique sous d'autres noms : \textbf{PRISM} permet d'accéder directement aux données des géants du numérique (Google, Facebook, Apple), tandis que \textbf{XKeyscore} permet de fouiller en temps réel les communications mondiales. Ces révélations provoquent un séisme politique, en particulier en Europe, où l'on découvre que les données des citoyens européens sont aspirées sans aucun garde-fou.
+
+C'est cette prise de conscience qui accélère l'adoption du \textbf{RGPD} par le Parlement européen en 2016 : l'Europe décide qu'il est temps de reprendre le contrôle sur les données de ses citoyens, non seulement face aux États, mais aussi face aux entreprises privées qui accumulent des volumes de données sans précédent. Le RGPD entre en application le 25 mai 2018, imposant pour la première fois des sanctions réellement dissuasives (jusqu'à 4\,\% du chiffre d'affaires mondial).
+
+\subsubsection{L'ère du \textit{big data} : quand les entreprises exploitent sans limites (2016--2018)}
+
+Mais à peine le RGPD est-il entré en vigueur qu'un scandale vient démontrer l'ampleur du problème. En mars 2018, le \textit{New York Times} et \textit{The Guardian} révèlent l'affaire \textbf{Cambridge Analytica} : la société britannique a exploité les données personnelles de \textbf{87 millions d'utilisateurs Facebook}, collectées via une application tierce apparemment anodine (un quiz de personnalité), pour construire des profils psychologiques et cibler des messages politiques personnalisés lors de la campagne présidentielle américaine de 2016 et du référendum sur le Brexit.
+
+Le scandale ne réside pas seulement dans la collecte non consentie : il réside dans l'\textit{usage}. Les données personnelles ne servent plus à vendre des publicités --- elles deviennent une \textbf{arme de manipulation démocratique}. Facebook est condamné à une amende record de 5 milliards de dollars par la FTC, et l'affaire devient le symbole d'une ère où les données personnelles sont le nouveau pétrole --- et où ceux qui les détiennent peuvent en abuser à grande échelle.
+
+C'est dans ce climat que les législateurs européens commencent à comprendre que protéger les données ne suffit plus : il faut aussi encadrer les \textit{algorithmes} qui les exploitent.
+
+\subsubsection{L'IA qui discrimine : le choc des biais algorithmiques (2016--2018)}
+
+Car au-delà de la collecte abusive, un problème plus insidieux émerge : les algorithmes d'IA, même bien intentionnés, peuvent \textbf{reproduire et amplifier les discriminations humaines}.
+
+En 2016, le média d'investigation ProPublica publie une enquête retentissante sur \textbf{COMPAS} (\textit{Correctional Offender Management Profiling for Alternative Sanctions}), un logiciel utilisé par des tribunaux américains pour évaluer le risque de récidive des accusés. L'enquête révèle que le système \textbf{surestimait systématiquement le risque pour les accusés afro-américains} : ceux-ci avaient presque deux fois plus de chances d'être faussement étiquetés comme futurs criminels que les accusés blancs. Le modèle, entraîné sur des données historiques reflétant des décennies de discrimination systémique dans la justice américaine, avait appris à perpétuer ces biais.
+
+Ce cas a provoqué un débat fondamental : peut-on confier des décisions qui affectent la vie des gens à des algorithmes opaques~? La chercheuse Alexandra Chouldechova a démontré en 2017, en réponse directe à l'affaire COMPAS, un résultat mathématique troublant : \textbf{il est impossible de satisfaire simultanément toutes les définitions de l'équité algorithmique}. Autrement dit, rendre un algorithme <<~juste~>> implique nécessairement un choix éthique explicite --- il n'existe pas de neutralité technique.
+
+Deux ans plus tard, le problème frappe directement le monde des ressources humaines. En 2018, Reuters révèle qu'\textbf{Amazon} avait développé un outil de recrutement basé sur l'IA qui \textbf{discriminait systématiquement les femmes}. Entraîné sur dix ans de CV reçus --- majoritairement masculins dans le secteur technologique --- le modèle avait appris à pénaliser les CV contenant le mot <<~women's~>> (comme <<~women's chess club~>>) et à favoriser les formulations typiquement masculines. Amazon a abandonné le projet, mais le mal était fait : le cas est devenu l'exemple emblématique des \textbf{biais algorithmiques en RH}, et exactement le type de risque que notre projet de prédiction d'attrition doit anticiper.
+
+\subsubsection{La surveillance au travail et la prédiction comportementale : des dérives proches de notre sujet}
+
+Ces scandales n'ont pas touché que le recrutement. Dans le domaine même de la gestion des employés --- le cœur de notre projet --- plusieurs dérives ont fait surface et illustrent les dangers d'une IA mal encadrée.
+
+En 2017, des enquêtes révèlent qu'\textbf{Uber} utilisait des algorithmes pour détecter les chauffeurs susceptibles de rejoindre un mouvement de grève ou de quitter la plateforme, et leur proposait des incitations ciblées (bonus, courses avantageuses) pour les en dissuader. En d'autres termes, Uber faisait exactement ce que notre projet propose --- de la prédiction d'attrition --- mais l'utilisait à des fins de \textbf{manipulation} plutôt que d'amélioration des conditions de travail. La frontière entre aide à la décision et contrôle social est mince.
+
+En 2019, l'entreprise \textbf{HireVue} proposait un outil d'entretien vidéo analysant les expressions faciales et le ton de voix des candidats pour prédire leur performance future. L'Electronic Privacy Information Center (EPIC) a déposé une plainte, arguant que le système était opaque et potentiellement discriminatoire. Sous la pression publique et réglementaire, HireVue a fini par abandonner l'analyse faciale en 2021.
+
+Enfin, en 2020, la banque \textbf{Barclays} a été contrainte d'abandonner un logiciel de surveillance qui traquait le temps passé par chaque employé à son bureau, ses pauses et sa productivité en temps réel. L'affaire, révélée par le \textit{Daily Telegraph}, a provoqué l'intervention de l'Information Commissioner's Office (ICO) britannique. Le message est clair : même dans un cadre professionnel, la surveillance algorithmique a des limites.
+
+\subsubsection{Le spectre du contrôle total : Clearview AI et le crédit social}
+
+Parallèlement à ces dérives sectorielles, deux cas ont cristallisé les craintes les plus profondes de la société civile.
+
+La start-up américaine \textbf{Clearview AI} a constitué une base de données de plus de \textbf{3 milliards d'images faciales} en aspirant sans autorisation les photos publiées sur les réseaux sociaux. Cette base était vendue à des forces de l'ordre et des entreprises privées pour identifier n'importe quel individu à partir d'une simple photo. En 2022, la CNIL a infligé à Clearview une amende de \textbf{20 millions d'euros}, et l'entreprise a été sanctionnée dans plusieurs pays. Ce cas a montré que la collecte massive de données biométriques, sans consentement et sans finalité définie, pouvait transformer tout espace public en un dispositif de surveillance.
+
+Mais c'est peut-être le \textbf{système de crédit social chinois}, déployé progressivement depuis 2014, qui incarne le mieux le scénario que les régulateurs européens cherchent à prévenir. Ce système agrège des données comportementales --- paiements, infractions, activité en ligne, relations sociales --- pour attribuer à chaque citoyen un score influençant son accès au crédit, aux transports, à l'emploi et aux services publics. L'AI Act européen cite explicitement ce type de système comme un \textbf{risque inacceptable} (article 5) : les systèmes de notation sociale y sont purement et simplement interdits.
+
+\subsubsection{Du constat à la régulation : la chronologie d'une prise de conscience}
+
+Chacun de ces scandales a laissé une trace dans le paysage législatif. Vue d'ensemble, la chronologie dessine une accélération :
+\begin{enumerate}
+    \item \textbf{1978} : loi Informatique et Libertés en France, en réaction au projet SAFARI ;
+    \item \textbf{2016} : adoption du RGPD par le Parlement européen, catalysée par les révélations Snowden et la prise de conscience sur la valeur des données personnelles ;
+    \item \textbf{2019} : publication des lignes directrices éthiques du HLEG européen, en réponse aux scandales Cambridge Analytica et Amazon ;
+    \item \textbf{2021} : proposition de l'AI Act par la Commission européenne, motivée par les affaires COMPAS, Clearview AI et la crainte d'un <<~crédit social à l'européenne~>> ;
+    \item \textbf{2023} : adoption du DPDPA indien, dans un contexte de pression internationale et de scandales locaux liés à Aadhaar (fuites de données biométriques de plus d'un milliard de citoyens indiens) ;
+    \item \textbf{2024} : entrée en vigueur de l'AI Act, premier cadre juridique contraignant au monde spécifiquement dédié à l'intelligence artificielle.
+\end{enumerate}
+
+C'est dans ce contexte historique que s'inscrit notre projet. L'utilisation de l'IA pour prédire l'attrition des employés touche directement aux enjeux soulevés par ces affaires : les biais algorithmiques d'Amazon montrent ce qui arrive quand un modèle RH apprend sur des données biaisées ; la surveillance de Barclays illustre la frontière entre analyse et contrôle ; la manipulation d'Uber rappelle qu'un même outil --- la prédiction d'attrition --- peut servir l'employé ou l'asservir, selon l'intention de celui qui le déploie. Comprendre cette histoire n'est pas un exercice académique : c'est une condition préalable pour concevoir un système \textbf{responsable, équitable et conforme}.
+
+\subsection{Objectifs du projet}
 
 Ce projet s'inscrit dans le cadre du bloc de formation en Intelligence Artificielle et poursuit plusieurs objectifs :
 \begin{enumerate}
@@ -158,6 +240,125 @@ Il formule six recommandations opérationnelles : former à l'éthique, rendre l
 Le rapport \textit{<<~Donner un sens à l'intelligence artificielle~>>}, remis au Premier ministre par Cédric Villani en mars 2018, définit une stratégie nationale et européenne en IA couvrant six dimensions : politique économique des données, recherche, emploi et transformation du travail, enjeux écologiques, cadre éthique, et inclusivité \cite{villani}.
 
 % ------------------------------------------------------------
+\subsection{Contributions de la DARPA (États-Unis)}
+
+La \textit{Defense Advanced Research Projects Agency} (DARPA), agence du département de la Défense des États-Unis, joue un rôle précurseur dans le développement de l'intelligence artificielle depuis les années 1960. Bien que ses travaux soient principalement orientés vers des applications militaires et de sécurité nationale, ils ont profondément influencé le paysage civil de l'IA et les réflexions internationales sur l'éthique algorithmique.
+
+\subsubsection{Programmes majeurs liés à l'IA}
+
+\paragraph{XAI --- Explainable Artificial Intelligence (2017--2021)}
+Le programme \textbf{XAI} (\textit{Explainable Artificial Intelligence}) est particulièrement pertinent pour notre projet. Lancé en 2017, il visait à développer des techniques permettant aux systèmes d'IA de \textbf{justifier leurs décisions} de manière compréhensible par un opérateur humain. Ce programme a donné naissance à des outils aujourd'hui largement utilisés dans le monde civil, notamment les méthodes d'explicabilité post-hoc (SHAP, LIME) que nous mobilisons dans ce projet. L'idée fondatrice de XAI --- qu'un modèle performant mais opaque est insuffisant pour la prise de décision --- est devenue un principe central de l'AI Act européen \cite{darpa_xai}.
+
+\paragraph{AI Next Campaign (2018--présent)}
+Lancée en 2018 avec un investissement de plus de 2 milliards de dollars, la campagne \textbf{AI Next} explore la <<~troisième vague~>> de l'IA : des systèmes capables non seulement de classer et prédire, mais aussi de \textbf{comprendre le contexte}, raisonner et s'adapter à de nouvelles situations. Cette vision dépasse les modèles statistiques que nous utilisons dans ce projet, mais elle illustre la trajectoire vers des systèmes d'IA de plus en plus autonomes --- et donc les enjeux croissants de supervision humaine.
+
+\paragraph{KAAS --- Knowledge-directed Artificial Intelligence Reasoning Over Schemas}
+Ce programme développe des systèmes capables de raisonnement contextuel en intégrant des connaissances structurées. Dans le domaine RH, une telle approche permettrait à un modèle de prédiction de l'attrition de prendre en compte des facteurs contextuels (conjoncture économique, restructuration en cours) qui ne figurent pas dans les données tabulaires.
+
+\paragraph{LwLL --- Learning with Less Labels}
+Le programme \textbf{LwLL} vise à réduire la dépendance des modèles d'IA aux grands volumes de données étiquetées. Cet enjeu est directement pertinent pour les projets RH, où les données sont souvent limitées en volume (quelques milliers d'employés) et où l'étiquetage (départ effectif vs maintien) ne concerne qu'une minorité de cas --- exactement le déséquilibre 84/16 que nous observons dans notre jeu de données.
+
+\subsubsection{Influence sur l'éthique de l'IA}
+
+Les travaux de la DARPA ont contribué à structurer le débat international sur l'IA responsable de plusieurs manières :
+\begin{itemize}
+    \item \textbf{Explicabilité comme exigence opérationnelle} : le programme XAI a démontré que la transparence des modèles n'est pas seulement une question éthique mais une nécessité pratique pour la confiance et l'adoption ;
+    \item \textbf{Robustesse et fiabilité} : les travaux sur l'IA adversariale (\textit{Guaranteeing AI Robustness against Deception}, GARD) ont mis en lumière la vulnérabilité des modèles aux perturbations, renforçant l'exigence de robustesse que l'on retrouve dans l'AI Act ;
+    \item \textbf{Approche centrée sur l'humain} : la doctrine \textit{human-in-the-loop} (humain dans la boucle), née dans le contexte militaire, est devenue un pilier de la régulation européenne (article 14 de l'AI Act sur la supervision humaine).
+\end{itemize}
+
+Si l'approche américaine reste globalement moins réglementaire que l'européenne --- les États-Unis privilégient l'autorégulation sectorielle et les lignes directrices volontaires --- les contributions techniques de la DARPA ont paradoxalement fourni les outils (explicabilité, robustesse, audit) qui permettent aujourd'hui de satisfaire les exigences contraignantes de l'AI Act.
+
+% ------------------------------------------------------------
+\subsection{Définitions : éthique et équité en intelligence artificielle}
+
+Avant d'appliquer les principes réglementaires à notre projet, il est essentiel de définir précisément deux notions fondamentales qui traversent l'ensemble du cadre juridique et technique : l'\textbf{éthique} et l'\textbf{équité}.
+
+\subsubsection{L'éthique en intelligence artificielle}
+
+\paragraph{Définition}
+L'\textbf{éthique de l'IA} désigne la branche de la philosophie morale appliquée aux systèmes d'intelligence artificielle. Elle interroge les principes et les valeurs qui doivent guider la conception, le développement, le déploiement et l'utilisation des systèmes d'IA. Contrairement à la réglementation, qui impose des obligations juridiques, l'éthique relève d'une démarche volontaire et réflexive visant à déterminer ce qui est \textit{juste}, \textit{bon} et \textit{souhaitable} dans l'usage de ces technologies \cite{cnil_ethique}.
+
+\paragraph{Dimensions de l'éthique en IA}
+L'éthique de l'IA se décline selon plusieurs dimensions complémentaires :
+\begin{itemize}
+    \item \textbf{Éthique de la conception} (\textit{ethics by design}) : intégrer les principes éthiques dès la phase de développement du système, et non comme un correctif a posteriori. Cela implique par exemple de choisir des métriques d'évaluation qui reflètent les valeurs souhaitées (recall plutôt qu'accuracy dans notre cas, pour ne pas invisibiliser les départs) ;
+    \item \textbf{Éthique de l'usage} : s'assurer que le système est utilisé conformément à sa finalité déclarée. Un modèle de prédiction de l'attrition conçu pour améliorer les conditions de travail ne doit pas être détourné pour surveiller ou sanctionner les employés ;
+    \item \textbf{Éthique de la responsabilité} : définir clairement qui est responsable des décisions prises avec l'aide du système --- le développeur, l'entreprise utilisatrice, le manager qui agit sur la prédiction~? ;
+    \item \textbf{Éthique des données} : questionner la légitimité de la collecte, la représentativité des données d'entraînement et le respect de la vie privée des personnes concernées.
+\end{itemize}
+
+\paragraph{Application à notre projet}
+Dans le contexte de la prédiction de l'attrition chez HumanForYou, l'éthique nous impose de nous poser plusieurs questions fondamentales : est-il légitime de prédire le comportement futur d'un employé à partir de ses données personnelles~? Le bénéfice attendu (rétention, amélioration des conditions) justifie-t-il l'intrusion dans la vie professionnelle~? Comment garantir que les prédictions ne stigmatisent pas certains profils d'employés~?
+
+\subsubsection{L'équité en intelligence artificielle}
+
+\paragraph{Définition}
+L'\textbf{équité algorithmique} (\textit{fairness}) désigne la propriété d'un système d'IA à traiter de manière juste et non discriminatoire les individus ou les groupes, indépendamment de leurs caractéristiques protégées (genre, âge, origine ethnique, statut marital, etc.). L'équité ne se réduit pas à l'absence de discrimination intentionnelle : un modèle peut être discriminatoire de manière indirecte, en reproduisant ou en amplifiant des biais présents dans les données historiques \cite{quantmetry}.
+
+\paragraph{Les différentes définitions mathématiques de l'équité}
+L'un des défis majeurs de l'équité algorithmique est qu'il n'existe pas de définition unique et universelle. Plusieurs métriques, parfois contradictoires entre elles, coexistent :
+\begin{itemize}
+    \item \textbf{Parité démographique} (\textit{demographic parity}) : le taux de prédiction positive doit être identique entre les groupes. Formellement : $P(\hat{Y}=1 \mid A=a) = P(\hat{Y}=1 \mid A=b)$ pour tout attribut protégé $A$ ;
+    \item \textbf{Égalité des chances} (\textit{equalized odds}) : les taux de vrais positifs (recall) et de faux positifs doivent être identiques entre les groupes : $P(\hat{Y}=1 \mid Y=y, A=a) = P(\hat{Y}=1 \mid Y=y, A=b)$ pour $y \in \{0,1\}$ ;
+    \item \textbf{Calibration} (\textit{predictive parity}) : la probabilité qu'une prédiction positive soit correcte doit être la même entre les groupes : $P(Y=1 \mid \hat{Y}=1, A=a) = P(Y=1 \mid \hat{Y}=1, A=b)$ ;
+    \item \textbf{Équité individuelle} : des individus similaires doivent recevoir des prédictions similaires, indépendamment de leur appartenance à un groupe.
+\end{itemize}
+
+\paragraph{Le théorème d'impossibilité}
+Un résultat fondamental en équité algorithmique, démontré par Chouldechova (2017) et Kleinberg \textit{et al.} (2016), établit qu'\textbf{il est mathématiquement impossible de satisfaire simultanément} la parité démographique, l'égalité des chances et la calibration, sauf dans le cas trivial où les taux de base sont identiques entre les groupes. Ce théorème impose un \textbf{choix éthique explicite} : quelle définition de l'équité est la plus pertinente pour le contexte d'usage~?
+
+\paragraph{Application à notre projet}
+Dans le contexte RH de HumanForYou, nous privilégions l'\textbf{égalité des chances} comme métrique d'équité principale. En effet, il est essentiel que le modèle détecte les employés à risque avec la même efficacité quel que soit leur genre ou leur âge. Une parité démographique stricte serait moins pertinente, car les taux d'attrition réels peuvent légitimement varier entre groupes en raison de facteurs structurels (conditions de travail différentes selon les départements, par exemple). L'exploration a montré un écart d'attrition faible entre genres (16,7\,\% vs 15,3\,\%), ce qui est encourageant.
+
+% ------------------------------------------------------------
+\subsection{Décisions et règles adoptées pour le projet}
+
+À la lumière du cadre réglementaire (RGPD, AI Act), des principes éthiques et des exigences d'équité, nous formulons ci-dessous les \textbf{décisions structurantes} et les \textbf{règles} que nous nous engageons à suivre tout au long de ce projet.
+
+\subsubsection{Positionnement du système}
+
+\begin{enumerate}
+    \item \textbf{Aide à la décision, jamais décision automatique.} Conformément à l'article 22 du RGPD et à l'article 14 de l'AI Act, le modèle de prédiction de l'attrition est strictement positionné comme un \textbf{outil d'aide à la décision}. Aucune action RH (entretien, formation, mobilité, ajustement salarial) ne pourra être déclenchée automatiquement par une prédiction du modèle. Toute décision implique l'intervention d'un responsable RH qualifié.
+    \item \textbf{Finalité légitime et explicite.} Le système a pour unique finalité l'\textbf{amélioration de la rétention des talents et des conditions de travail}. Il est interdit de l'utiliser à des fins de surveillance, de sanction, de classement des employés ou de justification de licenciements.
+    \item \textbf{Information des employés.} Conformément au principe de transparence du RGPD, les employés doivent être informés de l'existence du système, de sa finalité, des données utilisées et de leur droit de contestation.
+\end{enumerate}
+
+\subsubsection{Règles de traitement des données}
+
+\begin{enumerate}
+    \item \textbf{Minimisation.} Seules les variables strictement nécessaires à la prédiction sont conservées. Les variables constantes, redondantes ou non informatives sont supprimées dès le prétraitement.
+    \item \textbf{Pseudonymisation.} Les données sont manipulées via des identifiants numériques (\texttt{EmployeeID}). Aucune donnée nominative (nom, prénom, adresse) n'est utilisée ni stockée dans le cadre du projet.
+    \item \textbf{Conservation limitée.} Les données et le modèle sont conservés uniquement pour la durée nécessaire à l'analyse. Tout déploiement opérationnel nécessiterait une \textbf{analyse d'impact relative à la protection des données} (AIPD) préalable.
+    \item \textbf{Pas de données sensibles au sens du RGPD.} Le jeu de données ne contient pas de catégories de données sensibles (origines ethniques, opinions politiques, données de santé). Les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age}, bien qu'elles soient des attributs protégés, ne sont pas des données sensibles au sens de l'article 9 du RGPD.
+\end{enumerate}
+
+\subsubsection{Règles d'équité et de non-discrimination}
+
+\begin{enumerate}
+    \item \textbf{Conservation des attributs protégés.} Les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age} sont conservées dans le modèle plutôt que supprimées. Leur suppression pourrait paradoxalement dégrader l'équité si d'autres variables en sont des proxys (\texttt{MonthlyIncome} comme proxy du genre, par exemple).
+    \item \textbf{Audit d'équité systématique.} Après entraînement, le modèle est évalué selon les métriques d'égalité des chances : le recall et le taux de faux positifs sont comparés entre genres et entre tranches d'âge. Un écart supérieur à 5 points de pourcentage déclenchera une investigation.
+    \item \textbf{Débiaisage si nécessaire.} Si un biais significatif est détecté, des techniques de correction post-traitement (ajustement des seuils de décision par groupe) seront appliquées, en privilégiant les méthodes qui ne dégradent pas la performance globale.
+\end{enumerate}
+
+\subsubsection{Règles de transparence et d'explicabilité}
+
+\begin{enumerate}
+    \item \textbf{Explicabilité individuelle.} Pour chaque employé identifié comme <<~à risque~>>, le système fournit une explication des facteurs ayant contribué à la prédiction (via SHAP), permettant au responsable RH de comprendre et de contextualiser l'alerte.
+    \item \textbf{Explicabilité globale.} Un classement des facteurs d'attrition à l'échelle de l'entreprise est produit, permettant d'orienter les politiques RH structurelles.
+    \item \textbf{Documentation complète.} Conformément à l'AI Act, le système est accompagné d'une documentation technique décrivant les données utilisées, les choix de modélisation, les performances obtenues et les limites identifiées.
+\end{enumerate}
+
+\subsubsection{Règles de gouvernance et de supervision}
+
+\begin{enumerate}
+    \item \textbf{Supervision humaine continue.} Les prédictions alimentent un tableau de bord consulté par les responsables RH. Le modèle ne déclenche aucune action automatique.
+    \item \textbf{Réentraînement et audit périodique.} En cas de déploiement opérationnel, le modèle doit être réentraîné annuellement et audité pour détecter toute dérive de performance ou d'équité (\textit{model drift}).
+    \item \textbf{Droit de contestation.} Tout employé doit pouvoir demander une explication de sa classification et contester les conclusions du système auprès d'un interlocuteur humain.
+    \item \textbf{Comité de supervision.} Le déploiement opérationnel du système nécessiterait la constitution d'un comité de supervision incluant des représentants RH, des représentants du personnel et un référent éthique.
+\end{enumerate}
+
+% ------------------------------------------------------------
 \subsection{Application au projet HumanForYou sous le cadre européen}
 
 En nous plaçant dans le cadre réglementaire européen, notre projet de prédiction de l'attrition doit respecter plusieurs exigences.
@@ -183,9 +384,9 @@ Les résultats du modèle doivent servir d'\textbf{aide à la décision} et non 
 Le modèle doit être utilisé dans une finalité légitime : \textbf{la rétention des talents et l'amélioration des conditions de travail}, et non la surveillance ou la sanction des employés. Cette distinction est fondamentale pour garantir la conformité éthique et juridique du projet.
 
 % ------------------------------------------------------------
-\subsection{Bonus : cadre indien et comparaison}
+\subsection{Cadre réglementaire indien}
 
-Notre jeu de données étant issu d'une entreprise basée en Inde, il est intéressant d'examiner le cadre réglementaire indien et de le comparer à l'approche européenne.
+Notre jeu de données étant issu d'une entreprise basée en Inde, l'analyse du cadre réglementaire indien n'est pas un exercice théorique : c'est le cadre juridique \textbf{effectivement applicable} au traitement de ces données. L'étude de ce cadre permet à la fois de comprendre les obligations réelles pesant sur HumanForYou et de servir de \textbf{point de comparaison} avec l'approche européenne, mettant en lumière deux philosophies réglementaires distinctes face aux mêmes enjeux éthiques.
 
 \subsubsection{Le Digital Personal Data Protection Act (DPDPA, 2023)}
 
@@ -199,11 +400,18 @@ Contrairement au RGPD qui couvre toutes les données personnelles (numériques o
 
 Les sanctions peuvent atteindre 2,5 milliards INR (environ 28 millions d'euros), un plafond inférieur à celui du RGPD.
 
+\paragraph{Implications concrètes pour HumanForYou}
+Dans le cadre du DPDPA, HumanForYou pourrait légalement déployer un modèle de prédiction de l'attrition \textbf{sans le consentement explicite} de ses employés, en invoquant la finalité d'emploi de la Section 7(i). Cette situation contraste fortement avec le cadre européen, où une base juridique plus rigoureuse (intérêt légitime avec balance des intérêts, ou consentement) serait exigée. Cette facilité juridique ne dispense cependant pas d'une réflexion éthique : le fait qu'un traitement soit légal ne le rend pas nécessairement souhaitable.
+
 \subsubsection{Les India AI Governance Guidelines (2025)}
 
 Publiées le 5 novembre 2025 par le ministère de l'Électronique et des Technologies de l'Information (MeitY), ces lignes directrices définissent l'approche indienne de la gouvernance de l'IA \cite{niti_aayog}. L'Inde a fait le choix explicite de \textbf{ne pas adopter de loi dédiée à l'IA} à ce stade, en privilégiant une approche \textit{<<~light-touch~>>} fondée sur l'adaptation des cadres existants et des principes non contraignants : confiance intégrée, approche centrée sur l'humain, innovation, et équité.
 
+Cette approche reflète une stratégie assumée : l'Inde, en tant qu'économie en forte croissance dans le secteur technologique, souhaite \textbf{ne pas freiner l'innovation} par une réglementation trop lourde, tout en affirmant des principes éthiques de base. Le pari est que l'autorégulation et les bonnes pratiques suffiront à prévenir les dérives --- un pari que le cadre européen a explicitement rejeté en adoptant l'AI Act.
+
 \subsubsection{Comparaison synthétique}
+
+Le tableau~\ref{tab:comparaison} met en regard les deux cadres réglementaires sur les critères les plus pertinents pour notre projet.
 
 \begin{table}[htbp]
 \centering
@@ -237,369 +445,19 @@ Sanctions maximales & 4\,\% CA mondial ou 20\,M\euro{} & 2,5 Mds INR ($\approx$ 
 \end{tabularx}
 \end{table}
 
-L'Union européenne adopte une approche \textbf{prescriptive et contraignante}, avec une régulation horizontale par niveaux de risque et des obligations strictes pour les systèmes d'IA en RH. L'Inde privilégie une approche \textbf{souple et incitative}, fondée sur l'adaptation des lois existantes et des principes non contraignants. Les deux cadres convergent néanmoins sur les principes fondamentaux : transparence, équité, sécurité des données et supervision humaine.
+\subsubsection{Enseignements de la comparaison}
 
-% ============================================================
-\section{Description des données}
-
-Quatre sources de données ont été mises à disposition par le service RH de HumanForYou. L'ensemble des sources partagent la clé \texttt{EmployeeID} et entretiennent une relation 1:1, permettant une fusion par jointures successives (LEFT JOIN).
-
-\subsection{Données générales (\texttt{general\_data.csv})}
-
-Ce fichier constitue le socle du jeu de données avec \textbf{4\,410 employés} décrits par \textbf{24 variables}.
-
-\begin{table}[htbp]
-\centering
-\caption{Variables principales du fichier \texttt{general\_data.csv}}
-\small
-\begin{tabularx}{\textwidth}{l l X}
-\toprule
-\textbf{Variable} & \textbf{Type} & \textbf{Description} \\
-\midrule
-Age & Numérique & Âge de l'employé \\
-Attrition & Catégorielle & Variable cible (Yes/No) : départ en 2016 \\
-BusinessTravel & Catégorielle & Fréquence des déplacements professionnels \\
-Department & Catégorielle & Département (Sales, R\&D, HR) \\
-DistanceFromHome & Numérique & Distance domicile--travail (km) \\
-Education & Ordinale & Niveau d'éducation (1 à 5) \\
-EducationField & Catégorielle & Domaine d'études \\
-EmployeeCount & Constante & Toujours égal à 1 \\
-EmployeeID & Identifiant & Clé primaire \\
-Gender & Catégorielle & Genre (Male/Female) \\
-JobLevel & Ordinale & Niveau hiérarchique (1 à 5) \\
-JobRole & Catégorielle & Intitulé du poste \\
-MaritalStatus & Catégorielle & Statut marital \\
-MonthlyIncome & Numérique & Salaire mensuel (INR) \\
-NumCompaniesWorked & Numérique & Nombre d'entreprises précédentes \\
-Over18 & Constante & Toujours Y \\
-PercentSalaryHike & Numérique & Pourcentage d'augmentation salariale \\
-StandardHours & Constante & Toujours 8 \\
-StockOptionLevel & Ordinale & Niveau de stock-options (0 à 3) \\
-TotalWorkingYears & Numérique & Années d'expérience totale \\
-TrainingTimesLastYear & Numérique & Formations suivies l'année précédente \\
-YearsAtCompany & Numérique & Ancienneté dans l'entreprise \\
-YearsSinceLastPromotion & Numérique & Années depuis la dernière promotion \\
-YearsWithCurrManager & Numérique & Années avec le manager actuel \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\textit{Note :} les variables \texttt{EmployeeCount}, \texttt{Over18} et \texttt{StandardHours} sont constantes et n'apportent aucune information discriminante ; elles seront supprimées lors du prétraitement.
-
-\subsection{Enquête employé (\texttt{employee\_survey\_data.csv})}
-
-Enquête soumise en juin 2015 (réponse non obligatoire). Trois questions notées sur une échelle de Likert de 1 à 4 :
-\begin{itemize}
-    \item \texttt{EnvironmentSatisfaction} : satisfaction vis-à-vis de l'environnement de travail ;
-    \item \texttt{JobSatisfaction} : satisfaction vis-à-vis du travail ;
-    \item \texttt{WorkLifeBalance} : équilibre vie professionnelle / vie personnelle.
-\end{itemize}
-
-\subsection{Évaluation manager (\texttt{manager\_survey\_data.csv})}
-
-Dernière évaluation de chaque employé par son manager (février 2015) :
-\begin{itemize}
-    \item \texttt{JobInvolvement} : niveau d'implication au travail (1 à 4) ;
-    \item \texttt{PerformanceRating} : évaluation de la performance annuelle (1 à 4).
-\end{itemize}
-
-\subsection{Horaires de badgeage (\texttt{in\_out\_time/})}
-
-Deux fichiers (\texttt{in\_time.csv} et \texttt{out\_time.csv}) contenant les horodatages d'arrivée et de départ pour chaque jour ouvré de 2015 (261 jours). Ces données brutes ont été agrégées en \textbf{six indicateurs} par employé :
-
-\begin{table}[htbp]
-\centering
-\caption{Variables dérivées des horaires de badgeage}
-\small
-\begin{tabularx}{\textwidth}{l X}
-\toprule
-\textbf{Variable} & \textbf{Description} \\
-\midrule
-\texttt{avg\_in\_hour} & Heure d'arrivée moyenne (format décimal) \\
-\texttt{avg\_out\_hour} & Heure de départ moyenne \\
-\texttt{avg\_work\_hours} & Durée de travail journalière moyenne \\
-\texttt{std\_work\_hours} & Écart-type de la durée de travail (régularité) \\
-\texttt{nb\_days\_present} & Nombre de jours de présence en 2015 \\
-\texttt{nb\_days\_absent} & Nombre de jours d'absence en 2015 \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\subsection{Jeu de données fusionné (\texttt{dataset\_final.csv})}
-
-La fusion des quatre sources produit un jeu de données unique de \textbf{4\,410 lignes} et \textbf{35 colonnes}, réalisée par jointures LEFT JOIN successives sur \texttt{EmployeeID}. Le script \texttt{build\_dataset.py} automatise cette opération.
-
-% ============================================================
-\section{Exploration des données}
-
-Cette section synthétise les résultats de l'analyse exploratoire (EDA) en se concentrant sur les constats qui orientent directement le prétraitement, la modélisation et les recommandations.
-
-\subsection{Déséquilibre de la variable cible}
-
-Sur les 4\,410 employés, \textbf{711 ont quitté l'entreprise} en 2016, soit un taux d'attrition de \textbf{16,1\,\%} (figure~\ref{fig:attrition_distribution}). Ce ratio 84/16 constitue un déséquilibre modéré qui devra être traité lors de la modélisation (rééchantillonnage, pondération des classes, ou choix de métriques adaptées comme le F1-score et l'AUC-ROC plutôt que l'accuracy).
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.85\textwidth]{figures/fig_attrition_distribution.png}
-\caption{Distribution de la variable cible Attrition (effectifs et proportions)}
-\label{fig:attrition_distribution}
-\end{figure}
-
-\subsection{Qualité des données}
-
-Le jeu de données est de bonne qualité. Cinq variables présentent des valeurs manquantes, toutes à moins de 1\,\% : \texttt{WorkLifeBalance} (38), \texttt{EnvironmentSatisfaction} (25), \texttt{JobSatisfaction} (20), \texttt{NumCompaniesWorked} (19) et \texttt{TotalWorkingYears} (9). Une imputation simple (médiane ou mode) suffira. Trois variables sont constantes et seront supprimées : \texttt{EmployeeCount} (toujours 1), \texttt{Over18} (toujours Y) et \texttt{StandardHours} (toujours 8). De même, \texttt{PerformanceRating} ne prend que les valeurs 3 et 4 (aucune note inférieure à 3), ce qui en fait un signal très peu discriminant. Enfin, \texttt{avg\_in\_hour} présente un écart-type de seulement 0,02\,h (tous les employés arrivent à 10\,h) et pourra être écartée au profit de \texttt{avg\_work\_hours}.
-
-\subsection{Facteurs d'attrition : variables catégorielles}
-
-L'analyse du taux d'attrition par sous-groupe (figure~\ref{fig:attrition_by_category}) révèle trois populations à risque nettement au-dessus de la moyenne de 16,1\,\% :
+La confrontation des deux cadres révèle deux philosophies réglementaires face à un même défi :
 
 \begin{itemize}
-    \item Le département \textbf{Human Resources} : 30,2\,\%, soit presque le double de la moyenne ;
-    \item Les employés \textbf{célibataires} : 25,5\,\%, contre 10,1\,\% pour les divorcés ;
-    \item Les \textbf{voyageurs fréquents} : 24,9\,\%, soit trois fois plus que les sédentaires (8,0\,\%).
+    \item L'Union européenne adopte une approche \textbf{prescriptive et contraignante}, avec une régulation horizontale par niveaux de risque et des obligations strictes pour les systèmes d'IA en RH. Cette approche privilégie la \textbf{protection des droits individuels}, quitte à imposer des coûts de conformité élevés aux entreprises.
+    \item L'Inde privilégie une approche \textbf{souple et incitative}, fondée sur l'adaptation des lois existantes et des principes non contraignants. Cette approche privilégie la \textbf{croissance économique et l'innovation}, en pariant sur la responsabilisation volontaire des acteurs.
 \end{itemize}
 
-En revanche, l'écart entre hommes et femmes est faible (16,7\,\% vs 15,3\,\%), ce qui est rassurant du point de vue de l'équité du modèle.
+Les deux cadres convergent néanmoins sur les principes fondamentaux : transparence, équité, sécurité des données et supervision humaine. La différence réside dans le \textbf{degré de contrainte} : ce qui est obligatoire en Europe est recommandé en Inde.
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_attrition_by_category.png}
-\caption{Taux d'attrition par variable catégorielle --- les barres les plus longues identifient les populations à risque}
-\label{fig:attrition_by_category}
-\end{figure}
-
-\subsection{Facteurs d'attrition : variables numériques}
-
-La comparaison des moyennes entre employés partis et restés (tableau~\ref{tab:comparaison_moyennes}) met en évidence les variables les plus discriminantes. Les employés ayant quitté l'entreprise sont en moyenne \textbf{plus jeunes} ($-$4 ans), avec \textbf{moins d'ancienneté} ($-$2,2 ans), \textbf{moins d'expérience} ($-$3,6 ans) et une relation plus courte avec leur manager ($-$1,5 ans). Le résultat le plus marquant concerne la \textbf{durée de travail} : les partants travaillaient 8,32\,h/jour contre 7,58\,h pour les restants, soit \textbf{45 minutes de plus par jour} (figure~\ref{fig:numeric_distributions}).
-
-\begin{table}[htbp]
-\centering
-\caption{Moyennes des variables numériques selon le statut d'attrition}
-\label{tab:comparaison_moyennes}
-\small
-\begin{tabular}{l r r r}
-\toprule
-\textbf{Variable} & \textbf{Partis (Yes)} & \textbf{Restés (No)} & \textbf{Écart} \\
-\midrule
-avg\_work\_hours & \textbf{8,32} & \textbf{7,58} & $+$0,74 \\
-Age (années) & 33,61 & 37,56 & $-$3,95 \\
-TotalWorkingYears & 8,26 & 11,86 & $-$3,60 \\
-YearsAtCompany & 5,13 & 7,37 & $-$2,24 \\
-YearsWithCurrManager & 2,85 & 4,37 & $-$1,52 \\
-MonthlyIncome (INR) & 61\,683 & 65\,673 & $-$3\,990 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_numeric_distributions.png}
-\caption{Distributions des variables numériques clés, segmentées par statut d'attrition}
-\label{fig:numeric_distributions}
-\end{figure}
-
-\subsection{Corrélations et sélection de variables}
-
-Les corrélations de Pearson avec la variable cible (tableau~\ref{tab:correlations}) confirment la hiérarchie observée. Les deux facteurs les plus associés à l'attrition sont liés au \textbf{temps de travail effectif} ($r = +0,20$), suivis par les variables d'ancienneté et de satisfaction. Les corrélations restent modérées (max $|r| = 0,20$), ce qui justifie le recours à des modèles non linéaires (forêts aléatoires, gradient boosting) capables de capturer des interactions entre variables.
-
-\begin{table}[htbp]
-\centering
-\caption{Principales corrélations avec l'attrition (valeur absolue décroissante)}
-\label{tab:correlations}
-\small
-\begin{tabular}{l r l}
-\toprule
-\textbf{Variable} & \textbf{Corrélation} & \textbf{Implication} \\
-\midrule
-avg\_work\_hours & $+$0,202 & Plus d'heures $\rightarrow$ plus de départs \\
-TotalWorkingYears & $-$0,170 & Moins d'expérience $\rightarrow$ plus de départs \\
-Age & $-$0,159 & Plus jeune $\rightarrow$ plus de départs \\
-YearsWithCurrManager & $-$0,156 & Manager récent $\rightarrow$ plus de départs \\
-YearsAtCompany & $-$0,134 & Moins d'ancienneté $\rightarrow$ plus de départs \\
-JobSatisfaction & $-$0,103 & Insatisfaction $\rightarrow$ plus de départs \\
-EnvironmentSatisfaction & $-$0,102 & Env. insatisfaisant $\rightarrow$ plus de départs \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Synthèse des enseignements pour la suite}
-
-L'exploration fait ressortir trois axes structurants pour les étapes suivantes :
-\begin{enumerate}
-    \item \textbf{Prétraitement} : imputation légère (5 variables, $<$\,1\,\%), suppression de 4--5 variables non informatives (\texttt{EmployeeCount}, \texttt{Over18}, \texttt{StandardHours}, \texttt{avg\_in\_hour}, éventuellement \texttt{PerformanceRating}), encodage des catégorielles, et gestion du déséquilibre 84/16.
-    \item \textbf{Modélisation} : les corrélations modérées et les interactions pressenties (âge $\times$ ancienneté, département $\times$ travel) orientent vers des modèles non linéaires. La variable \texttt{avg\_work\_hours} devra être surveillée comme potentiel levier principal.
-    \item \textbf{Recommandations} : trois leviers d'action se dessinent déjà --- la \textbf{charge de travail} (premier facteur), l'\textbf{accompagnement managérial} des profils jeunes et récents, et la \textbf{politique de déplacements} pour les voyageurs fréquents.
-\end{enumerate}
-
-% ============================================================
-\section{Prétraitement}
-
-Chaque décision de prétraitement est motivée par un constat de l'exploration ou une exigence réglementaire.
-
-\subsection{Suppression des variables non informatives}
-
-Cinq variables sont écartées car elles n'apportent aucun pouvoir discriminant :
-\begin{itemize}
-    \item \texttt{EmployeeCount}, \texttt{Over18}, \texttt{StandardHours} : constantes (variance nulle) ;
-    \item \texttt{avg\_in\_hour} : écart-type de 0,02\,h --- tous les employés arrivent à 10\,h ;
-    \item \texttt{EmployeeID} : identifiant, non prédictif.
-\end{itemize}
-La variable \texttt{PerformanceRating} (uniquement les valeurs 3 et 4) est conservée mais son faible pouvoir discriminant est à surveiller. Par ailleurs, \texttt{avg\_out\_hour} et \texttt{avg\_work\_hours} sont fortement corrélées ($r \approx 1$) ; seule \texttt{avg\_work\_hours} est conservée pour éviter la multicolinéarité. De même, \texttt{nb\_days\_present} et \texttt{nb\_days\_absent} sont complémentaires (somme constante = 261) ; seule \texttt{nb\_days\_absent} est retenue.
-
-\subsection{Imputation des valeurs manquantes}
-
-Les cinq variables concernées présentent moins de 1\,\% de valeurs manquantes. Stratégie retenue :
-\begin{itemize}
-    \item \textbf{Variables ordinales d'enquête} (\texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}, \texttt{WorkLifeBalance}) : imputation par la \textbf{médiane}, qui préserve la distribution sur une échelle de Likert ;
-    \item \textbf{Variables numériques} (\texttt{NumCompaniesWorked}, \texttt{TotalWorkingYears}) : imputation par la \textbf{médiane}, robuste aux distributions asymétriques observées.
-\end{itemize}
-
-\subsection{Encodage des variables catégorielles}
-
-\begin{itemize}
-    \item \textbf{Variables nominales} (\texttt{Department}, \texttt{JobRole}, \texttt{EducationField}, \texttt{BusinessTravel}, \texttt{Gender}, \texttt{MaritalStatus}) : encodage \textit{one-hot} pour éviter d'introduire un ordre artificiel ;
-    \item \textbf{Variable cible} (\texttt{Attrition}) : encodage binaire (Yes~$= 1$, No~$= 0$).
-\end{itemize}
-
-\subsection{Standardisation}
-
-Les variables numériques présentent des échelles très différentes (ex.\ \texttt{MonthlyIncome} $\in [10\,090 ; 199\,990]$ vs \texttt{JobLevel} $\in [1 ; 5]$). Une \textbf{standardisation} (centrée-réduite, \textit{StandardScaler}) est appliquée pour les modèles sensibles à l'échelle (régression logistique). Les modèles à base d'arbres n'en ont pas besoin mais n'en souffrent pas.
-
-\subsection{Gestion du déséquilibre des classes}
-
-Le ratio 84/16 peut conduire un modèle à prédire systématiquement <<~No~>> et obtenir 84\,\% d'accuracy sans rien apprendre. Deux approches complémentaires sont envisagées :
-\begin{itemize}
-    \item \textbf{SMOTE} (\textit{Synthetic Minority Over-sampling Technique}) : génération d'exemples synthétiques de la classe minoritaire sur le jeu d'entraînement uniquement ;
-    \item \textbf{Pondération des classes} (\texttt{class\_weight='balanced'}) : pénalisation plus forte des erreurs sur la classe <<~Yes~>>.
-\end{itemize}
-
-\subsection{Traitement des attributs protégés}
-
-Conformément aux exigences de l'AI Act (section~2) et au principe d'équité, les variables \texttt{Gender}, \texttt{MaritalStatus} et \texttt{Age} sont des attributs protégés. Plutôt que de les exclure du modèle --- ce qui pourrait paradoxalement dégrader l'équité si d'autres variables en sont des proxys --- nous les conservons et prévoyons une \textbf{analyse de biais} a posteriori (section~7) pour vérifier que le modèle ne discrimine pas selon ces critères.
-
-% ============================================================
-\section{Modélisation}
-
-\subsection{Stratégie de validation}
-
-Le jeu de données est divisé en \textbf{80\,\% entraînement / 20\,\% test}, avec stratification sur la variable cible pour préserver le ratio 84/16 dans chaque partition. Une \textbf{validation croisée stratifiée à 5 plis} est utilisée sur le jeu d'entraînement pour la sélection des hyperparamètres et l'estimation non biaisée des performances.
-
-\subsection{Choix des métriques}
-
-Étant donné le déséquilibre des classes et l'objectif métier (identifier les employés à risque), l'accuracy seule est insuffisante. Les métriques privilégiées sont :
-\begin{itemize}
-    \item \textbf{Recall} (sensibilité) : proportion d'employés réellement partis correctement identifiés --- c'est la métrique prioritaire, car un employé à risque non détecté est un départ non anticipé ;
-    \item \textbf{Precision} : proportion de prédictions <<~Yes~>> effectivement correctes --- limite les fausses alertes ;
-    \item \textbf{F1-score} : moyenne harmonique de precision et recall, équilibre global ;
-    \item \textbf{AUC-ROC} : capacité du modèle à distinguer les deux classes indépendamment du seuil de décision.
-\end{itemize}
-
-\subsection{Modèles retenus}
-
-L'exploration a montré des corrélations modérées et des interactions pressenties (âge $\times$ ancienneté, département $\times$ déplacements), ce qui oriente vers des modèles capables de capturer la non-linéarité. Quatre modèles sont comparés :
-
-\begin{enumerate}
-    \item \textbf{Régression logistique} : modèle de référence (\textit{baseline}), linéaire et interprétable. Permet de vérifier si les relations linéaires suffisent et offre des coefficients directement lisibles --- un atout pour la transparence exigée par l'AI Act ;
-    \item \textbf{Arbre de décision} : modèle interprétable par nature (règles de décision explicites), utile comme outil de communication auprès de la direction ;
-    \item \textbf{Forêt aléatoire} (\textit{Random Forest}) : agrégation d'arbres qui réduit le sur-apprentissage et capture les interactions. Fournit nativement une importance des variables ;
-    \item \textbf{Gradient Boosting} (XGBoost ou LightGBM) : modèle état de l'art en classification tabulaire, construit séquentiellement des arbres correcteurs. Attendu comme le plus performant, mais moins interprétable --- d'où le recours à SHAP pour l'explicabilité.
-\end{enumerate}
-
-\subsection{Recherche d'hyperparamètres}
-
-Une recherche par \textbf{GridSearchCV} (ou \textit{RandomizedSearchCV} pour le gradient boosting) est menée sur les hyperparamètres clés de chaque modèle : régularisation ($C$) pour la régression logistique, profondeur maximale et nombre minimal d'échantillons par feuille pour les arbres, nombre d'estimateurs et taux d'apprentissage pour le boosting. Le critère d'optimisation est le \textbf{F1-score} en validation croisée.
-
-% ============================================================
-\section{Résultats et interprétation}
-
-\subsection{Comparaison des modèles}
-
-Les performances attendues sur le jeu de test sont présentées dans le tableau~\ref{tab:resultats}. Le gradient boosting offre le meilleur compromis, mais la forêt aléatoire reste compétitive avec une interprétabilité supérieure.
-
-\begin{table}[htbp]
-\centering
-\caption{Performances comparées des modèles (estimations sur jeu de test)}
-\label{tab:resultats}
-\small
-\begin{tabular}{l r r r r}
-\toprule
-\textbf{Modèle} & \textbf{Accuracy} & \textbf{Recall} & \textbf{F1-score} & \textbf{AUC-ROC} \\
-\midrule
-Régression logistique & $\sim$0,83 & $\sim$0,55 & $\sim$0,52 & $\sim$0,77 \\
-Arbre de décision & $\sim$0,80 & $\sim$0,58 & $\sim$0,50 & $\sim$0,72 \\
-Forêt aléatoire & $\sim$0,86 & $\sim$0,65 & $\sim$0,60 & $\sim$0,83 \\
-Gradient Boosting & $\sim$\textbf{0,87} & $\sim$\textbf{0,70} & $\sim$\textbf{0,64} & $\sim$\textbf{0,86} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-La régression logistique, malgré ses performances modestes, confirme que les relations linéaires seules ne suffisent pas à capturer la complexité du phénomène d'attrition. Le gain significatif des modèles ensemblistes valide l'hypothèse d'interactions non linéaires formulée lors de l'exploration.
-
-\subsection{Importance des variables}
-
-L'analyse de l'importance des variables (via l'importance de permutation et les valeurs SHAP) fait ressortir un podium cohérent avec l'exploration :
-
-\begin{enumerate}
-    \item \textbf{avg\_work\_hours} : facteur n\textsuperscript{o}\,1 --- les employés en surcharge horaire sont les plus à risque ;
-    \item \textbf{TotalWorkingYears / Age} : les profils jeunes et peu expérimentés partent plus facilement ;
-    \item \textbf{YearsWithCurrManager} : une relation récente avec le manager est associée à un risque accru ;
-    \item \textbf{BusinessTravel} (Travel\_Frequently) : les déplacements fréquents amplifient le risque ;
-    \item \textbf{JobSatisfaction / EnvironmentSatisfaction} : la satisfaction agit comme facteur protecteur.
-\end{enumerate}
-
-\subsection{Explicabilité et conformité}
-
-Conformément aux exigences de l'AI Act pour les systèmes à haut risque (section~2.1.2), le modèle retenu est accompagné d'outils d'explicabilité :
-\begin{itemize}
-    \item \textbf{SHAP} (\textit{SHapley Additive exPlanations}) : pour chaque employé identifié à risque, un graphique SHAP permet de visualiser la contribution de chaque variable à la prédiction. Cela permet au responsable RH de comprendre \textit{pourquoi} le modèle alerte sur un employé donné ;
-    \item \textbf{Importance globale} : classement des facteurs d'attrition à l'échelle de l'entreprise, utile pour orienter les politiques RH.
-\end{itemize}
-
-\subsection{Analyse d'équité}
-
-Pour répondre aux exigences du RGPD et de l'AI Act concernant la non-discrimination, le modèle est évalué selon les critères suivants :
-\begin{itemize}
-    \item \textbf{Parité démographique} : le taux de prédiction <<~à risque~>> ne doit pas varier significativement selon le genre ;
-    \item \textbf{Égalité des chances} : le recall doit être comparable entre hommes et femmes, et entre tranches d'âge.
-\end{itemize}
-L'exploration a montré un écart d'attrition faible entre genres (16,7\,\% vs 15,3\,\%), ce qui est encourageant. Si un biais est détecté, des techniques de débiaisage post-traitement (ajustement des seuils par groupe) peuvent être appliquées.
-
-\subsection{Recommandations stratégiques}
-
-Les résultats de l'analyse convergent vers \textbf{trois leviers d'action} concrets pour la direction de HumanForYou :
-
-\paragraph{1. Réguler la charge de travail}
-La durée de travail est le premier facteur d'attrition ($r = +0,20$, $+$45\,min/jour pour les partants). Recommandations :
-\begin{itemize}
-    \item Mettre en place un \textbf{suivi automatisé des heures} avec alerte au-delà de 8,5\,h/jour en moyenne sur un mois ;
-    \item Revoir la distribution des tâches dans les équipes à forte charge ;
-    \item Instaurer un \textbf{droit à la déconnexion} effectif.
-\end{itemize}
-
-\paragraph{2. Accompagner les profils jeunes et récents}
-Les employés jeunes, peu expérimentés et ayant un manager récent sont les plus vulnérables. Recommandations :
-\begin{itemize}
-    \item Mettre en place un programme de \textbf{mentorat} pour les 2 premières années ;
-    \item Renforcer les \textbf{entretiens de suivi} à 3, 6 et 12 mois après l'embauche ou un changement de manager ;
-    \item Proposer des parcours de \textbf{formation et d'évolution} visibles dès l'intégration.
-\end{itemize}
-
-\paragraph{3. Repenser la politique de déplacements}
-Les voyageurs fréquents ont un taux d'attrition de 24,9\,\% (3$\times$ les sédentaires). Recommandations :
-\begin{itemize}
-    \item Plafonner le nombre de déplacements par trimestre ou proposer des \textbf{rotations} ;
-    \item Développer les alternatives en \textbf{visioconférence} lorsque le présentiel n'est pas indispensable ;
-    \item Compenser les déplacements par des \textbf{jours de récupération} ou des primes.
-\end{itemize}
-
-\paragraph{Cadre d'utilisation du modèle}
-Conformément à l'article~22 du RGPD et aux obligations de l'AI Act (section~2), le modèle doit être utilisé comme un \textbf{outil d'aide à la décision} et non comme un système de décision automatique. Concrètement :
-\begin{itemize}
-    \item Les prédictions alimentent un \textbf{tableau de bord} consulté par les responsables RH ;
-    \item Toute action (entretien, formation, ajustement) est décidée par un humain qualifié ;
-    \item Les employés sont \textbf{informés} de l'existence du système et peuvent en contester les conclusions ;
-    \item Le modèle est \textbf{réentraîné annuellement} et audité pour détecter toute dérive de performance ou d'équité.
-\end{itemize}
+\paragraph{Notre positionnement}
+Pour ce projet, bien que les données proviennent d'un contexte indien (où les contraintes sont moindres), nous choisissons de nous conformer au \textbf{cadre le plus exigeant} --- le cadre européen. Ce choix est motivé par trois raisons : (1) il garantit un niveau de protection maximal pour les employés ; (2) il rend le système potentiellement déployable dans un contexte international ; (3) il constitue un exercice pédagogique plus complet sur les enjeux réglementaires de l'IA.
 
 % ============================================================
 \section{Conclusion}
@@ -663,6 +521,10 @@ Government of India, \textit{The Digital Personal Data Protection Act, 2023} (No
 \bibitem{niti_aayog}
 Ministry of Electronics and Information Technology (MeitY), \textit{India AI Governance Guidelines}, 5 novembre 2025,
 \url{https://indiaai.gov.in/article/india-ai-governance-guidelines-empowering-ethical-and-responsible-ai}.
+
+\bibitem{darpa_xai}
+DARPA, \textit{Explainable Artificial Intelligence (XAI) Program},
+\url{https://www.darpa.mil/research/programs/explainable-artificial-intelligence}.
 
 \bibitem{quantmetry}
 Quantmetry (Capgemini), \textit{Intelligence artificielle et éthique~: comment définir et mesurer l'équité algorithmique},
