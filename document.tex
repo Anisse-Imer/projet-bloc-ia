@@ -148,7 +148,7 @@ Ce projet s'inscrit dans le cadre du bloc de formation en Intelligence Artificie
 
 L'enjeu final n'est pas seulement de produire un modèle performant, mais de transformer les résultats en recommandations stratégiques compréhensibles par un décideur.
 
-Bien que le jeu de données provienne d'une entreprise indienne, nous nous plaçons dans un premier temps \textbf{dans le cadre réglementaire européen} (RGPD, AI Act) pour analyser les enjeux éthiques et juridiques. Dans un second temps, nous comparerons cette approche avec le cadre indien afin de mettre en lumière les convergences et divergences entre les deux systèmes.
+Bien que le jeu de données provienne d'une entreprise indienne, nous nous plaçons \textbf{dans le cadre réglementaire européen} (RGPD, AI Act) pour analyser les enjeux éthiques et juridiques, celui-ci constituant le cadre le plus exigeant et le plus complet à ce jour.
 
 % ============================================================
 \section{Cadre réglementaire et éthique}
@@ -383,82 +383,6 @@ Les résultats du modèle doivent servir d'\textbf{aide à la décision} et non 
 \paragraph{Finalité et proportionnalité}
 Le modèle doit être utilisé dans une finalité légitime : \textbf{la rétention des talents et l'amélioration des conditions de travail}, et non la surveillance ou la sanction des employés. Cette distinction est fondamentale pour garantir la conformité éthique et juridique du projet.
 
-% ------------------------------------------------------------
-\subsection{Cadre réglementaire indien}
-
-Notre jeu de données étant issu d'une entreprise basée en Inde, l'analyse du cadre réglementaire indien n'est pas un exercice théorique : c'est le cadre juridique \textbf{effectivement applicable} au traitement de ces données. L'étude de ce cadre permet à la fois de comprendre les obligations réelles pesant sur HumanForYou et de servir de \textbf{point de comparaison} avec l'approche européenne, mettant en lumière deux philosophies réglementaires distinctes face aux mêmes enjeux éthiques.
-
-\subsubsection{Le Digital Personal Data Protection Act (DPDPA, 2023)}
-
-L'Inde a adopté le 11 août 2023 sa première loi cadre de protection des données personnelles numériques, le \textit{Digital Personal Data Protection Act} (DPDPA), dont les règles d'application ont été notifiées en novembre 2025 \cite{dpdpa}.
-
-Contrairement au RGPD qui couvre toutes les données personnelles (numériques ou non), le DPDPA ne s'applique qu'aux \textbf{données personnelles numériques}. Il repose principalement sur deux bases juridiques :
-\begin{itemize}
-    \item \textbf{Le consentement} : libre, spécifique, éclairé, inconditionnel et sans ambiguïté ;
-    \item \textbf{Les utilisations légitimes} (Section 7 et Annexe 1) : le traitement est autorisé \textit{sans consentement} pour certaines finalités, notamment les finalités liées à l'emploi (Section 7(i)), la protection de l'employeur contre les pertes, ou la fourniture de services demandés par l'employé.
-\end{itemize}
-
-Les sanctions peuvent atteindre 2,5 milliards INR (environ 28 millions d'euros), un plafond inférieur à celui du RGPD.
-
-\paragraph{Implications concrètes pour HumanForYou}
-Dans le cadre du DPDPA, HumanForYou pourrait légalement déployer un modèle de prédiction de l'attrition \textbf{sans le consentement explicite} de ses employés, en invoquant la finalité d'emploi de la Section 7(i). Cette situation contraste fortement avec le cadre européen, où une base juridique plus rigoureuse (intérêt légitime avec balance des intérêts, ou consentement) serait exigée. Cette facilité juridique ne dispense cependant pas d'une réflexion éthique : le fait qu'un traitement soit légal ne le rend pas nécessairement souhaitable.
-
-\subsubsection{Les India AI Governance Guidelines (2025)}
-
-Publiées le 5 novembre 2025 par le ministère de l'Électronique et des Technologies de l'Information (MeitY), ces lignes directrices définissent l'approche indienne de la gouvernance de l'IA \cite{niti_aayog}. L'Inde a fait le choix explicite de \textbf{ne pas adopter de loi dédiée à l'IA} à ce stade, en privilégiant une approche \textit{<<~light-touch~>>} fondée sur l'adaptation des cadres existants et des principes non contraignants : confiance intégrée, approche centrée sur l'humain, innovation, et équité.
-
-Cette approche reflète une stratégie assumée : l'Inde, en tant qu'économie en forte croissance dans le secteur technologique, souhaite \textbf{ne pas freiner l'innovation} par une réglementation trop lourde, tout en affirmant des principes éthiques de base. Le pari est que l'autorégulation et les bonnes pratiques suffiront à prévenir les dérives --- un pari que le cadre européen a explicitement rejeté en adoptant l'AI Act.
-
-\subsubsection{Comparaison synthétique}
-
-Le tableau~\ref{tab:comparaison} met en regard les deux cadres réglementaires sur les critères les plus pertinents pour notre projet.
-
-\begin{table}[htbp]
-\centering
-\caption{Comparaison des cadres réglementaires UE / Inde}
-\label{tab:comparaison}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.8cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
-\toprule
-\textbf{Critère} & \textbf{Union Européenne} & \textbf{Inde} \\
-\midrule
-Textes principaux & RGPD + AI Act & DPDPA 2023 + AI Guidelines 2025 \\
-\addlinespace
-Portée & Toutes données personnelles & Données numériques uniquement \\
-\addlinespace
-Bases juridiques & 6 bases (consentement, contrat, intérêt légitime, etc.) & 2 bases (consentement + utilisations légitimes) \\
-\addlinespace
-Données employés & Consentement ou base contractuelle avec évaluation & Traitement sans consentement pour finalités d'emploi \\
-\addlinespace
-Décision automatisée & Interdite (art.~22) sauf exceptions & Pas d'interdiction explicite \\
-\addlinespace
-Régulation de l'IA & Loi contraignante (AI Act) & Lignes directrices non contraignantes \\
-\addlinespace
-Systèmes IA en RH & Classés haut risque & Pas de classification par risque \\
-\addlinespace
-Test de biais & Obligatoire & Recommandé \\
-\addlinespace
-Supervision humaine & Obligatoire & Recommandée \\
-\addlinespace
-Sanctions maximales & 4\,\% CA mondial ou 20\,M\euro{} & 2,5 Mds INR ($\approx$ 28\,M\euro{}) \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\subsubsection{Enseignements de la comparaison}
-
-La confrontation des deux cadres révèle deux philosophies réglementaires face à un même défi :
-
-\begin{itemize}
-    \item L'Union européenne adopte une approche \textbf{prescriptive et contraignante}, avec une régulation horizontale par niveaux de risque et des obligations strictes pour les systèmes d'IA en RH. Cette approche privilégie la \textbf{protection des droits individuels}, quitte à imposer des coûts de conformité élevés aux entreprises.
-    \item L'Inde privilégie une approche \textbf{souple et incitative}, fondée sur l'adaptation des lois existantes et des principes non contraignants. Cette approche privilégie la \textbf{croissance économique et l'innovation}, en pariant sur la responsabilisation volontaire des acteurs.
-\end{itemize}
-
-Les deux cadres convergent néanmoins sur les principes fondamentaux : transparence, équité, sécurité des données et supervision humaine. La différence réside dans le \textbf{degré de contrainte} : ce qui est obligatoire en Europe est recommandé en Inde.
-
-\paragraph{Notre positionnement}
-Pour ce projet, bien que les données proviennent d'un contexte indien (où les contraintes sont moindres), nous choisissons de nous conformer au \textbf{cadre le plus exigeant} --- le cadre européen. Ce choix est motivé par trois raisons : (1) il garantit un niveau de protection maximal pour les employés ; (2) il rend le système potentiellement déployable dans un contexte international ; (3) il constitue un exercice pédagogique plus complet sur les enjeux réglementaires de l'IA.
-
 % ============================================================
 \section{Conclusion}
 
@@ -466,7 +390,7 @@ Ce projet a permis de mener une analyse complète du turnover chez HumanForYou, 
 
 \textbf{Trois résultats clés se dégagent.} Premièrement, la surcharge horaire est le premier facteur d'attrition --- un résultat obtenu grâce aux données de badgeage, souvent sous-exploitées. Deuxièmement, le profil type de l'employé à risque est un jeune collaborateur, récemment arrivé, avec un nouveau manager et des déplacements fréquents. Troisièmement, les modèles ensemblistes (forêt aléatoire, gradient boosting) surpassent nettement la régression logistique, confirmant la présence d'interactions non linéaires entre facteurs.
 
-\textbf{L'ancrage réglementaire} dans le cadre européen (RGPD, AI Act) a guidé chaque étape : pseudonymisation des données, conservation des attributs protégés avec analyse de biais, explicabilité via SHAP, et positionnement strict du modèle comme aide à la décision --- jamais comme système autonome. Ce cadre, s'il est plus contraignant que l'approche indienne, offre des garanties de confiance essentielles pour l'acceptabilité du système par les employés.
+\textbf{L'ancrage réglementaire} dans le cadre européen (RGPD, AI Act) a guidé chaque étape : pseudonymisation des données, conservation des attributs protégés avec analyse de biais, explicabilité via SHAP, et positionnement strict du modèle comme aide à la décision --- jamais comme système autonome. Ce cadre offre des garanties de confiance essentielles pour l'acceptabilité du système par les employés.
 
 \textbf{Limites et perspectives.} Le jeu de données est une coupe transversale (2015--2016) ; un suivi longitudinal permettrait de capturer l'évolution des facteurs dans le temps. L'intégration de données qualitatives (entretiens de sortie, verbatims d'enquêtes) enrichirait la compréhension des motifs de départ. Enfin, le déploiement effectif du modèle nécessiterait une \textbf{analyse d'impact relative à la protection des données} (AIPD) et la constitution d'un comité de supervision, conformément aux obligations pour les systèmes à haut risque.
 
@@ -514,13 +438,6 @@ Centre de politique européenne, \textit{Lignes directrices en matière d'éthiq
 Commission européenne, \textit{Lignes directrices relatives à l'utilisation de l'intelligence artificielle}, 2022,
 \url{https://teachertaskforce.org/sites/default/files/2023-06/2022_EC_lignes-directrices-utilisation-IA_FR.pdf}.
 
-\bibitem{dpdpa}
-Government of India, \textit{The Digital Personal Data Protection Act, 2023} (No.~22 of 2023), 11 août 2023. Règles d'application notifiées en novembre 2025,
-\url{https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf}.
-
-\bibitem{niti_aayog}
-Ministry of Electronics and Information Technology (MeitY), \textit{India AI Governance Guidelines}, 5 novembre 2025,
-\url{https://indiaai.gov.in/article/india-ai-governance-guidelines-empowering-ethical-and-responsible-ai}.
 
 \bibitem{darpa_xai}
 DARPA, \textit{Explainable Artificial Intelligence (XAI) Program},
