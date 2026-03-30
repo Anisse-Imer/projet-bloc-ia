@@ -17,6 +17,8 @@
 \usepackage{eurosym}
 \usepackage{multirow}
 \usepackage{tocloft}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, calc}
 
 \geometry{margin=2.5cm}
 
@@ -74,7 +76,7 @@ La réglementation qui encadre aujourd'hui l'intelligence artificielle et la pro
 
 L'histoire débute bien avant l'intelligence artificielle, à une époque où l'informatique commence tout juste à s'imposer dans les administrations. En 1974, la France découvre le projet \textbf{SAFARI} (Système Automatisé pour les Fichiers Administratifs et le Répertoire des Individus) : le gouvernement prévoit d'interconnecter l'ensemble des fichiers administratifs français --- impôts, sécurité sociale, police, état civil --- via le numéro de sécurité sociale. L'ambition est de <<~rationaliser~>> la gestion publique, mais le résultat serait un fichage complet de chaque citoyen.
 
-Le journal \textit{Le Monde} titre <<~SAFARI ou la chasse aux Français~>>, et l'indignation est immédiate. Ce scandale conduit directement à l'adoption de la \textbf{loi Informatique et Libertés} du 6 janvier 1978 et à la création de la \textbf{CNIL} --- l'une des premières autorités de protection des données au monde. Le message est clair : même avec de bonnes intentions, le croisement massif de données personnelles représente une menace pour les libertés individuelles.
+Le journal \textit{Le Monde} titre <<~SAFARI ou la chasse aux Français~>> \cite{safari_lemonde}, et l'indignation est immédiate. Ce scandale conduit directement à l'adoption de la \textbf{loi Informatique et Libertés} du 6 janvier 1978 \cite{loi_informatique_libertes} et à la création de la \textbf{CNIL} --- l'une des premières autorités de protection des données au monde. Le message est clair : même avec de bonnes intentions, le croisement massif de données personnelles représente une menace pour les libertés individuelles.
 
 Ce premier avertissement pose un principe qui traversera les décennies suivantes : \textit{ce n'est pas parce qu'on peut collecter et croiser des données qu'on doit le faire}.
 
@@ -82,13 +84,13 @@ Ce premier avertissement pose un principe qui traversera les décennies suivante
 
 Trente ans plus tard, la même question resurgit à une tout autre échelle. Après les attentats du 11 septembre 2001, le Pentagone lance le programme \textbf{Total Information Awareness} (TIA), qui vise à croiser massivement les données personnelles --- transactions bancaires, communications, déplacements --- pour détecter les menaces terroristes avant qu'elles ne se concrétisent. Le programme est officiellement abandonné en 2003 face à la pression du Congrès américain, qui y voit les prémices d'un État de surveillance.
 
-Mais l'histoire ne s'arrête pas là. En 2013, Edward Snowden révèle que la NSA a poursuivi cette logique sous d'autres noms : \textbf{PRISM} permet d'accéder directement aux données des géants du numérique (Google, Facebook, Apple), tandis que \textbf{XKeyscore} permet de fouiller en temps réel les communications mondiales. Ces révélations provoquent un séisme politique, en particulier en Europe, où l'on découvre que les données des citoyens européens sont aspirées sans aucun garde-fou.
+Mais l'histoire ne s'arrête pas là. En 2013, Edward Snowden révèle que la NSA a poursuivi cette logique sous d'autres noms : \textbf{PRISM} permet d'accéder directement aux données des géants du numérique (Google, Facebook, Apple), tandis que \textbf{XKeyscore} permet de fouiller en temps réel les communications mondiales \cite{snowden_greenwald}. Ces révélations provoquent un séisme politique, en particulier en Europe, où l'on découvre que les données des citoyens européens sont aspirées sans aucun garde-fou.
 
-C'est cette prise de conscience qui accélère l'adoption du \textbf{RGPD} par le Parlement européen en 2016 : l'Europe décide qu'il est temps de reprendre le contrôle sur les données de ses citoyens, non seulement face aux États, mais aussi face aux entreprises privées qui accumulent des volumes de données sans précédent. Le RGPD entre en application le 25 mai 2018, imposant pour la première fois des sanctions réellement dissuasives (jusqu'à 4\,\% du chiffre d'affaires mondial).
+C'est cette prise de conscience qui accélère l'adoption du \textbf{RGPD} par le Parlement européen en 2016 \cite{rgpd_officiel} : l'Europe décide qu'il est temps de reprendre le contrôle sur les données de ses citoyens, non seulement face aux États, mais aussi face aux entreprises privées qui accumulent des volumes de données sans précédent. Le RGPD entre en application le 25 mai 2018, imposant pour la première fois des sanctions réellement dissuasives (jusqu'à 4\,\% du chiffre d'affaires mondial).
 
 \subsubsection{L'ère du \textit{big data} : quand les entreprises exploitent sans limites (2016--2018)}
 
-Mais à peine le RGPD est-il entré en vigueur qu'un scandale vient démontrer l'ampleur du problème. En mars 2018, le \textit{New York Times} et \textit{The Guardian} révèlent l'affaire \textbf{Cambridge Analytica} : la société britannique a exploité les données personnelles de \textbf{87 millions d'utilisateurs Facebook}, collectées via une application tierce apparemment anodine (un quiz de personnalité), pour construire des profils psychologiques et cibler des messages politiques personnalisés lors de la campagne présidentielle américaine de 2016 et du référendum sur le Brexit.
+Mais à peine le RGPD est-il entré en vigueur qu'un scandale vient démontrer l'ampleur du problème. En mars 2018, le \textit{New York Times} et \textit{The Guardian} révèlent l'affaire \textbf{Cambridge Analytica} \cite{cambridge_analytica} : la société britannique a exploité les données personnelles de \textbf{87 millions d'utilisateurs Facebook}, collectées via une application tierce apparemment anodine (un quiz de personnalité), pour construire des profils psychologiques et cibler des messages politiques personnalisés lors de la campagne présidentielle américaine de 2016 et du référendum sur le Brexit.
 
 Le scandale ne réside pas seulement dans la collecte non consentie : il réside dans l'\textit{usage}. Les données personnelles ne servent plus à vendre des publicités --- elles deviennent une \textbf{arme de manipulation démocratique}. Facebook est condamné à une amende record de 5 milliards de dollars par la FTC, et l'affaire devient le symbole d'une ère où les données personnelles sont le nouveau pétrole --- et où ceux qui les détiennent peuvent en abuser à grande échelle.
 
@@ -98,27 +100,27 @@ C'est dans ce climat que les législateurs européens commencent à comprendre q
 
 Car au-delà de la collecte abusive, un problème plus insidieux émerge : les algorithmes d'IA, même bien intentionnés, peuvent \textbf{reproduire et amplifier les discriminations humaines}.
 
-En 2016, le média d'investigation ProPublica publie une enquête retentissante sur \textbf{COMPAS} (\textit{Correctional Offender Management Profiling for Alternative Sanctions}), un logiciel utilisé par des tribunaux américains pour évaluer le risque de récidive des accusés. L'enquête révèle que le système \textbf{surestimait systématiquement le risque pour les accusés afro-américains} : ceux-ci avaient presque deux fois plus de chances d'être faussement étiquetés comme futurs criminels que les accusés blancs. Le modèle, entraîné sur des données historiques reflétant des décennies de discrimination systémique dans la justice américaine, avait appris à perpétuer ces biais.
+En 2016, le média d'investigation ProPublica publie une enquête retentissante sur \textbf{COMPAS} (\textit{Correctional Offender Management Profiling for Alternative Sanctions}), un logiciel utilisé par des tribunaux américains pour évaluer le risque de récidive des accusés \cite{propublica_compas}. L'enquête révèle que le système \textbf{surestimait systématiquement le risque pour les accusés afro-américains} : ceux-ci avaient presque deux fois plus de chances d'être faussement étiquetés comme futurs criminels que les accusés blancs. Le modèle, entraîné sur des données historiques reflétant des décennies de discrimination systémique dans la justice américaine, avait appris à perpétuer ces biais.
 
-Ce cas a provoqué un débat fondamental : peut-on confier des décisions qui affectent la vie des gens à des algorithmes opaques~? La chercheuse Alexandra Chouldechova a démontré en 2017, en réponse directe à l'affaire COMPAS, un résultat mathématique troublant : \textbf{il est impossible de satisfaire simultanément toutes les définitions de l'équité algorithmique}. Autrement dit, rendre un algorithme <<~juste~>> implique nécessairement un choix éthique explicite --- il n'existe pas de neutralité technique.
+Ce cas a provoqué un débat fondamental : peut-on confier des décisions qui affectent la vie des gens à des algorithmes opaques~? La chercheuse Alexandra Chouldechova a démontré en 2017 \cite{chouldechova_2017}, en réponse directe à l'affaire COMPAS, un résultat mathématique troublant : \textbf{il est impossible de satisfaire simultanément toutes les définitions de l'équité algorithmique}. Autrement dit, rendre un algorithme <<~juste~>> implique nécessairement un choix éthique explicite --- il n'existe pas de neutralité technique.
 
-Deux ans plus tard, le problème frappe directement le monde des ressources humaines. En 2018, Reuters révèle qu'\textbf{Amazon} avait développé un outil de recrutement basé sur l'IA qui \textbf{discriminait systématiquement les femmes}. Entraîné sur dix ans de CV reçus --- majoritairement masculins dans le secteur technologique --- le modèle avait appris à pénaliser les CV contenant le mot <<~women's~>> (comme <<~women's chess club~>>) et à favoriser les formulations typiquement masculines. Amazon a abandonné le projet, mais le mal était fait : le cas est devenu l'exemple emblématique des \textbf{biais algorithmiques en RH}, et exactement le type de risque que notre projet de prédiction d'attrition doit anticiper.
+Deux ans plus tard, le problème frappe directement le monde des ressources humaines. En 2018, Reuters révèle qu'\textbf{Amazon} avait développé un outil de recrutement basé sur l'IA qui \textbf{discriminait systématiquement les femmes} \cite{amazon_reuters}. Entraîné sur dix ans de CV reçus --- majoritairement masculins dans le secteur technologique --- le modèle avait appris à pénaliser les CV contenant le mot <<~women's~>> (comme <<~women's chess club~>>) et à favoriser les formulations typiquement masculines. Amazon a abandonné le projet, mais le mal était fait : le cas est devenu l'exemple emblématique des \textbf{biais algorithmiques en RH}, et exactement le type de risque que notre projet de prédiction d'attrition doit anticiper.
 
 \subsubsection{La surveillance au travail et la prédiction comportementale : des dérives proches de notre sujet}
 
 Ces scandales n'ont pas touché que le recrutement. Dans le domaine même de la gestion des employés --- le cœur de notre projet --- plusieurs dérives ont fait surface et illustrent les dangers d'une IA mal encadrée.
 
-En 2017, des enquêtes révèlent qu'\textbf{Uber} utilisait des algorithmes pour détecter les chauffeurs susceptibles de rejoindre un mouvement de grève ou de quitter la plateforme, et leur proposait des incitations ciblées (bonus, courses avantageuses) pour les en dissuader. En d'autres termes, Uber faisait exactement ce que notre projet propose --- de la prédiction d'attrition --- mais l'utilisait à des fins de \textbf{manipulation} plutôt que d'amélioration des conditions de travail. La frontière entre aide à la décision et contrôle social est mince.
+En 2017, des enquêtes révèlent qu'\textbf{Uber} utilisait des algorithmes pour détecter les chauffeurs susceptibles de rejoindre un mouvement de grève ou de quitter la plateforme, et leur proposait des incitations ciblées (bonus, courses avantageuses) pour les en dissuader \cite{uber_algo}. En d'autres termes, Uber faisait exactement ce que notre projet propose --- de la prédiction d'attrition --- mais l'utilisait à des fins de \textbf{manipulation} plutôt que d'amélioration des conditions de travail. La frontière entre aide à la décision et contrôle social est mince.
 
-En 2019, l'entreprise \textbf{HireVue} proposait un outil d'entretien vidéo analysant les expressions faciales et le ton de voix des candidats pour prédire leur performance future. L'Electronic Privacy Information Center (EPIC) a déposé une plainte, arguant que le système était opaque et potentiellement discriminatoire. Sous la pression publique et réglementaire, HireVue a fini par abandonner l'analyse faciale en 2021.
+En 2019, l'entreprise \textbf{HireVue} proposait un outil d'entretien vidéo analysant les expressions faciales et le ton de voix des candidats pour prédire leur performance future. L'Electronic Privacy Information Center (EPIC) a déposé une plainte \cite{hirevue_epic}, arguant que le système était opaque et potentiellement discriminatoire. Sous la pression publique et réglementaire, HireVue a fini par abandonner l'analyse faciale en 2021.
 
-Enfin, en 2020, la banque \textbf{Barclays} a été contrainte d'abandonner un logiciel de surveillance qui traquait le temps passé par chaque employé à son bureau, ses pauses et sa productivité en temps réel. L'affaire, révélée par le \textit{Daily Telegraph}, a provoqué l'intervention de l'Information Commissioner's Office (ICO) britannique. Le message est clair : même dans un cadre professionnel, la surveillance algorithmique a des limites.
+Enfin, en 2020, la banque \textbf{Barclays} a été contrainte d'abandonner un logiciel de surveillance qui traquait le temps passé par chaque employé à son bureau, ses pauses et sa productivité en temps réel. L'affaire, révélée par la presse \cite{barclays_surveillance}, a provoqué l'intervention de l'Information Commissioner's Office (ICO) britannique. Le message est clair : même dans un cadre professionnel, la surveillance algorithmique a des limites.
 
 \subsubsection{Le spectre du contrôle total : Clearview AI et le crédit social}
 
 Parallèlement à ces dérives sectorielles, deux cas ont cristallisé les craintes les plus profondes de la société civile.
 
-La start-up américaine \textbf{Clearview AI} a constitué une base de données de plus de \textbf{3 milliards d'images faciales} en aspirant sans autorisation les photos publiées sur les réseaux sociaux. Cette base était vendue à des forces de l'ordre et des entreprises privées pour identifier n'importe quel individu à partir d'une simple photo. En 2022, la CNIL a infligé à Clearview une amende de \textbf{20 millions d'euros}, et l'entreprise a été sanctionnée dans plusieurs pays. Ce cas a montré que la collecte massive de données biométriques, sans consentement et sans finalité définie, pouvait transformer tout espace public en un dispositif de surveillance.
+La start-up américaine \textbf{Clearview AI} a constitué une base de données de plus de \textbf{3 milliards d'images faciales} en aspirant sans autorisation les photos publiées sur les réseaux sociaux. Cette base était vendue à des forces de l'ordre et des entreprises privées pour identifier n'importe quel individu à partir d'une simple photo. En 2022, la CNIL a infligé à Clearview une amende de \textbf{20 millions d'euros} \cite{clearview_cnil}, et l'entreprise a été sanctionnée dans plusieurs pays. Ce cas a montré que la collecte massive de données biométriques, sans consentement et sans finalité définie, pouvait transformer tout espace public en un dispositif de surveillance.
 
 Mais c'est peut-être le \textbf{système de crédit social chinois}, déployé progressivement depuis 2014, qui incarne le mieux le scénario que les régulateurs européens cherchent à prévenir. Ce système agrège des données comportementales --- paiements, infractions, activité en ligne, relations sociales --- pour attribuer à chaque citoyen un score influençant son accès au crédit, aux transports, à l'emploi et aux services publics. L'AI Act européen cite explicitement ce type de système comme un \textbf{risque inacceptable} (article 5) : les systèmes de notation sociale y sont purement et simplement interdits.
 
@@ -130,9 +132,60 @@ Chacun de ces scandales a laissé une trace dans le paysage législatif. Vue d'e
     \item \textbf{2016} : adoption du RGPD par le Parlement européen, catalysée par les révélations Snowden et la prise de conscience sur la valeur des données personnelles ;
     \item \textbf{2019} : publication des lignes directrices éthiques du HLEG européen, en réponse aux scandales Cambridge Analytica et Amazon ;
     \item \textbf{2021} : proposition de l'AI Act par la Commission européenne, motivée par les affaires COMPAS, Clearview AI et la crainte d'un <<~crédit social à l'européenne~>> ;
-    \item \textbf{2023} : adoption du DPDPA indien, dans un contexte de pression internationale et de scandales locaux liés à Aadhaar (fuites de données biométriques de plus d'un milliard de citoyens indiens) ;
+    \item \textbf{2023} : adoption du DPDPA indien \cite{dpdpa_india}, dans un contexte de pression internationale et de scandales locaux liés à Aadhaar (fuites de données biométriques de plus d'un milliard de citoyens indiens) ;
     \item \textbf{2024} : entrée en vigueur de l'AI Act, premier cadre juridique contraignant au monde spécifiquement dédié à l'intelligence artificielle.
 \end{enumerate}
+
+\noindent La figure~\ref{fig:chronologie} offre une vue d'ensemble de cette progression, où chaque scandale a catalysé une avancée réglementaire.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    incident/.style={draw, densely dashed, rounded corners=2pt, text width=4.5cm, font=\footnotesize, inner sep=3pt, align=left},
+    regl/.style={draw, rounded corners=2pt, text width=4.5cm, font=\footnotesize, inner sep=3pt, align=left},
+    annee/.style={font=\footnotesize\bfseries, fill=black, text=white, rounded corners=1.5pt, inner sep=2.5pt, minimum width=0.9cm},
+    lien/.style={densely dotted, -{Stealth[length=2.5pt]}, gray!70}
+]
+% Vertical timeline
+\draw[thick, gray!40] (0,0.5) -- (0,-11.2);
+% 1974
+\node[annee] at (0,0) {1974};
+\node[incident, anchor=east] (i74) at (-0.5,0) {Scandale \textbf{SAFARI}\\Fichage administratif de masse};
+% 1978
+\node[annee] at (0,-1.4) {1978};
+\node[regl, anchor=west] (r78) at (0.5,-1.4) {\textbf{Loi Informatique et Libertés}\\Création de la CNIL};
+\draw[lien] (i74.south east) -- (r78.north west);
+% 2013
+\node[annee] at (0,-2.9) {2013};
+\node[incident, anchor=east] (i13) at (-0.5,-2.9) {Révélations \textbf{Snowden}\\Programmes PRISM, XKeyscore};
+% 2016
+\node[annee] at (0,-4.3) {2016};
+\node[incident, anchor=east] (i16) at (-0.5,-4.3) {Enquête ProPublica sur \textbf{COMPAS}\\Biais racial en justice prédictive};
+\node[regl, anchor=west] (r16) at (0.5,-4.3) {\textbf{RGPD} adopté\\par le Parlement européen};
+\draw[lien] (i13.south east) -- (r16.north west);
+% 2018
+\node[annee] at (0,-5.9) {2018};
+\node[incident, anchor=east] (i18) at (-0.5,-5.9) {\textbf{Cambridge Analytica} (87\,M profils)\\Biais \textbf{Amazon AI} (genre en RH)};
+\node[regl, anchor=west] (r18) at (0.5,-5.9) {\textbf{RGPD} en application (25 mai)\\Rapport \textbf{Villani}};
+% 2019
+\node[annee] at (0,-7.5) {2019};
+\node[incident, anchor=east] (i19) at (-0.5,-7.5) {\textbf{HireVue} (analyse faciale)\\Surveillance \textbf{Barclays} (2020)};
+\node[regl, anchor=west] (r19) at (0.5,-7.5) {Principes éthiques du \textbf{HLEG}\\Sept exigences pour l'IA de confiance};
+\draw[lien] (i18.south east) -- (r19.north west);
+% 2022
+\node[annee] at (0,-9.1) {2022};
+\node[incident, anchor=east] (i22) at (-0.5,-9.1) {\textbf{Clearview AI}\\Amende CNIL de 20\,M\,\euro{}};
+% 2024
+\node[annee] at (0,-10.5) {2024};
+\node[regl, anchor=west] (r24) at (0.5,-10.5) {\textbf{AI Act} en vigueur\\1\textsuperscript{er} cadre IA contraignant au monde};
+\draw[lien] (i22.south east) -- (r24.north west);
+% Legend
+\node[incident, text width=1.4cm, font=\scriptsize, align=center] at (-4,-11.5) {Incidents};
+\node[regl, text width=1.5cm, font=\scriptsize, align=center] at (-1.8,-11.5) {Régulations};
+\end{tikzpicture}
+\caption{Chronologie des incidents et réponses réglementaires (1974--2024). Les flèches en pointillés illustrent les liens de causalité entre scandales et avancées législatives.}
+\label{fig:chronologie}
+\end{figure}
 
 C'est dans ce contexte historique que s'inscrit notre projet. L'utilisation de l'IA pour prédire l'attrition des employés touche directement aux enjeux soulevés par ces affaires : les biais algorithmiques d'Amazon montrent ce qui arrive quand un modèle RH apprend sur des données biaisées ; la surveillance de Barclays illustre la frontière entre analyse et contrôle ; la manipulation d'Uber rappelle qu'un même outil --- la prédiction d'attrition --- peut servir l'employé ou l'asservir, selon l'intention de celui qui le déploie. Comprendre cette histoire n'est pas un exercice académique : c'est une condition préalable pour concevoir un système \textbf{responsable, équitable et conforme}.
 
@@ -160,7 +213,7 @@ L'utilisation de l'intelligence artificielle dans le domaine des ressources huma
 
 \subsubsection{Le Règlement Général sur la Protection des Données (RGPD)}
 
-Le RGPD, entré en vigueur le 25 mai 2018, constitue le socle de la protection des données personnelles dans l'Union européenne. Il s'applique à tout traitement de données personnelles, qu'elles soient numériques ou non \cite{cnil_rgpd}.
+Le RGPD, entré en vigueur le 25 mai 2018, constitue le socle de la protection des données personnelles dans l'Union européenne. Il s'applique à tout traitement de données personnelles, qu'elles soient numériques ou non \cite{rgpd_officiel, cnil_rgpd}.
 
 \paragraph{Principes fondamentaux}
 Le règlement repose sur plusieurs principes clés directement applicables à notre projet :
@@ -193,6 +246,41 @@ Le règlement (UE) 2024/1689, dit \textit{AI Act}, est entré en vigueur le 1\te
     \item \textbf{Risque limité} : obligations de transparence ;
     \item \textbf{Risque minimal} : libre utilisation.
 \end{itemize}
+
+\noindent La figure~\ref{fig:pyramide_risque} illustre cette classification et situe notre projet dans la catégorie à haut risque.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+    % Level 1 (bottom) - Minimal risk
+    \fill[black!8] (-5,0) -- (5,0) -- (3.8,1.5) -- (-3.8,1.5) -- cycle;
+    \draw[thick] (-5,0) -- (5,0) -- (3.8,1.5) -- (-3.8,1.5) -- cycle;
+    \node[font=\footnotesize\bfseries] at (0,0.75) {Risque minimal};
+    % Level 2 - Limited risk
+    \fill[black!18] (-3.8,1.5) -- (3.8,1.5) -- (2.5,3) -- (-2.5,3) -- cycle;
+    \draw[thick] (-3.8,1.5) -- (3.8,1.5) -- (2.5,3) -- (-2.5,3) -- cycle;
+    \node[font=\footnotesize\bfseries] at (0,2.25) {Risque limité};
+    % Level 3 - High risk
+    \fill[black!35] (-2.5,3) -- (2.5,3) -- (1.2,4.5) -- (-1.2,4.5) -- cycle;
+    \draw[thick] (-2.5,3) -- (2.5,3) -- (1.2,4.5) -- (-1.2,4.5) -- cycle;
+    \node[font=\footnotesize\bfseries, text=white] at (0,3.75) {Haut risque};
+    % Level 4 (top) - Unacceptable
+    \fill[black!70] (-1.2,4.5) -- (1.2,4.5) -- (0,6) -- cycle;
+    \draw[thick] (-1.2,4.5) -- (1.2,4.5) -- (0,6) -- cycle;
+    \node[font=\footnotesize\bfseries, text=white] at (0,5.05) {Interdit};
+    % Annotations
+    \draw[thin, gray] (1.0,5.1) -- (5.5,5.1);
+    \node[font=\scriptsize, anchor=west, text width=5.3cm] at (5.5,5.1) {Notation sociale, manipulation subliminale (art.~5)};
+    \draw[thin, gray] (2.5,3.75) -- (5.5,3.75);
+    \node[font=\scriptsize, anchor=west, text width=5.3cm] at (5.5,3.75) {\textbf{IA en emploi et RH} (annexe~III)\\Gestion des risques, gouvernance des données, documentation, contrôle humain, AIPD\\[1pt]\textit{$\leftarrow$ Notre projet se situe ici}};
+    \draw[thin, gray] (3.8,2.25) -- (5.5,2.25);
+    \node[font=\scriptsize, anchor=west, text width=5.3cm] at (5.5,2.25) {Chatbots, systèmes de génération\\Obligations de transparence};
+    \draw[thin, gray] (5,0.75) -- (5.5,0.75);
+    \node[font=\scriptsize, anchor=west, text width=5.3cm] at (5.5,0.75) {Filtres anti-spam, jeux vidéo\\Libre utilisation};
+\end{tikzpicture}
+\caption{Classification des systèmes d'IA par niveau de risque selon l'AI Act~\cite{ia_act}.}
+\label{fig:pyramide_risque}
+\end{figure}
 
 \paragraph{Les systèmes IA en RH : risque élevé}
 L'annexe III de l'AI Act classe explicitement comme \textbf{à haut risque} les systèmes d'IA utilisés dans le domaine de l'emploi, notamment pour :
@@ -247,7 +335,7 @@ La \textit{Defense Advanced Research Projects Agency} (DARPA), agence du départ
 \subsubsection{Programmes majeurs liés à l'IA}
 
 \paragraph{XAI --- Explainable Artificial Intelligence (2017--2021)}
-Le programme \textbf{XAI} (\textit{Explainable Artificial Intelligence}) est particulièrement pertinent pour notre projet. Lancé en 2017, il visait à développer des techniques permettant aux systèmes d'IA de \textbf{justifier leurs décisions} de manière compréhensible par un opérateur humain. Ce programme a donné naissance à des outils aujourd'hui largement utilisés dans le monde civil, notamment les méthodes d'explicabilité post-hoc (SHAP, LIME) que nous mobilisons dans ce projet. L'idée fondatrice de XAI --- qu'un modèle performant mais opaque est insuffisant pour la prise de décision --- est devenue un principe central de l'AI Act européen \cite{darpa_xai}.
+Le programme \textbf{XAI} (\textit{Explainable Artificial Intelligence}) est particulièrement pertinent pour notre projet. Lancé en 2017, il visait à développer des techniques permettant aux systèmes d'IA de \textbf{justifier leurs décisions} de manière compréhensible par un opérateur humain. Ce programme a donné naissance à des outils aujourd'hui largement utilisés dans le monde civil, notamment les méthodes d'explicabilité post-hoc (SHAP \cite{lundberg_shap}, LIME \cite{ribeiro_lime}) que nous mobilisons dans ce projet. L'idée fondatrice de XAI --- qu'un modèle performant mais opaque est insuffisant pour la prise de décision --- est devenue un principe central de l'AI Act européen \cite{darpa_xai}.
 
 \paragraph{AI Next Campaign (2018--présent)}
 Lancée en 2018 avec un investissement de plus de 2 milliards de dollars, la campagne \textbf{AI Next} explore la <<~troisième vague~>> de l'IA : des systèmes capables non seulement de classer et prédire, mais aussi de \textbf{comprendre le contexte}, raisonner et s'adapter à de nouvelles situations. Cette vision dépasse les modèles statistiques que nous utilisons dans ce projet, mais elle illustre la trajectoire vers des systèmes d'IA de plus en plus autonomes --- et donc les enjeux croissants de supervision humaine.
@@ -306,7 +394,32 @@ L'un des défis majeurs de l'équité algorithmique est qu'il n'existe pas de d�
 \end{itemize}
 
 \paragraph{Le théorème d'impossibilité}
-Un résultat fondamental en équité algorithmique, démontré par Chouldechova (2017) et Kleinberg \textit{et al.} (2016), établit qu'\textbf{il est mathématiquement impossible de satisfaire simultanément} la parité démographique, l'égalité des chances et la calibration, sauf dans le cas trivial où les taux de base sont identiques entre les groupes. Ce théorème impose un \textbf{choix éthique explicite} : quelle définition de l'équité est la plus pertinente pour le contexte d'usage~?
+Un résultat fondamental en équité algorithmique, démontré par Chouldechova (2017) \cite{chouldechova_2017} et Kleinberg \textit{et al.} (2017) \cite{kleinberg_2016}, établit qu'\textbf{il est mathématiquement impossible de satisfaire simultanément} la parité démographique, l'égalité des chances et la calibration, sauf dans le cas trivial où les taux de base sont identiques entre les groupes. Ce théorème impose un \textbf{choix éthique explicite} : quelle définition de l'équité est la plus pertinente pour le contexte d'usage~? La figure~\ref{fig:impossibilite} illustre cette incompatibilité.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+    % Three overlapping circles
+    \draw[thick] (90:1.4) circle (2.1cm);
+    \draw[thick] (210:1.4) circle (2.1cm);
+    \draw[thick] (330:1.4) circle (2.1cm);
+    % Labels outside
+    \node[font=\small\bfseries, text width=3.2cm, align=center] at (90:3.7) {Parité\\démographique};
+    \node[font=\small\bfseries, text width=3.2cm, align=center] at (210:3.7) {Égalité des\\chances};
+    \node[font=\small\bfseries, text width=3.2cm, align=center] at (330:3.7) {Calibration};
+    % Formulas inside non-overlapping regions
+    \node[font=\scriptsize, text width=2.6cm, align=center] at (90:2.1) {$P(\hat{Y}\!=\!1 \mid A\!=\!a)$\\$= P(\hat{Y}\!=\!1 \mid A\!=\!b)$};
+    \node[font=\scriptsize, text width=2.6cm, align=center] at (210:2.1) {TPR et FPR\\identiques\\entre groupes};
+    \node[font=\scriptsize, text width=2.6cm, align=center] at (330:2.1) {$P(Y\!=\!1 \mid \hat{Y}\!=\!1)$\\identique\\entre groupes};
+    % Center: impossibility
+    \draw[thick] (-0.25,0.15) -- (0.25,-0.25);
+    \draw[thick] (-0.25,-0.25) -- (0.25,0.15);
+    % Annotation
+    \node[font=\footnotesize, text width=10cm, align=center, anchor=north] at (0,-3.7) {\textit{Sauf dans le cas trivial où les taux de base sont identiques entre les groupes,}\\[1pt]\textit{ces trois critères ne peuvent être satisfaits simultanément.}};
+\end{tikzpicture}
+\caption{Théorème d'impossibilité de l'équité algorithmique~\cite{chouldechova_2017, kleinberg_2016}~: les trois principales définitions de la \textit{fairness} sont mutuellement incompatibles dans le cas général.}
+\label{fig:impossibilite}
+\end{figure}
 
 \paragraph{Application à notre projet}
 Dans le contexte RH de HumanForYou, nous privilégions l'\textbf{égalité des chances} comme métrique d'équité principale. En effet, il est essentiel que le modèle détecte les employés à risque avec la même efficacité quel que soit leur genre ou leur âge. Une parité démographique stricte serait moins pertinente, car les taux d'attrition réels peuvent légitimement varier entre groupes en raison de facteurs structurels (conditions de travail différentes selon les départements, par exemple). L'exploration a montré un écart d'attrition faible entre genres (16,7\,\% vs 15,3\,\%), ce qui est encourageant.
@@ -483,13 +596,64 @@ Certaines variables du jeu de données --- telles que \texttt{Gender}, \texttt{M
 \end{itemize}
 
 \paragraph{Transparence et explicabilité}
-Conformément aux principes du HLEG et aux exigences de l'AI Act, le modèle doit être \textbf{interprétable} : il ne suffit pas de prédire l'attrition, il faut être en mesure d'expliquer \textit{pourquoi} un employé est identifié comme à risque. L'utilisation de techniques d'explicabilité (importance des variables, SHAP, LIME, etc.) sera privilégiée.
+Conformément aux principes du HLEG et aux exigences de l'AI Act, le modèle doit être \textbf{interprétable} : il ne suffit pas de prédire l'attrition, il faut être en mesure d'expliquer \textit{pourquoi} un employé est identifié comme à risque. L'utilisation de techniques d'explicabilité (importance des variables, SHAP \cite{lundberg_shap}, LIME \cite{ribeiro_lime}, etc.) sera privilégiée.
 
 \paragraph{Supervision humaine}
 Les résultats du modèle doivent servir d'\textbf{aide à la décision} et non de décision automatique. Toute action RH fondée sur les prédictions (entretien, formation, ajustement salarial) doit impliquer un jugement humain qualifié, conformément à l'article 22 du RGPD.
 
 \paragraph{Finalité et proportionnalité}
 Le modèle doit être utilisé dans une finalité légitime : \textbf{la rétention des talents et l'amélioration des conditions de travail}, et non la surveillance ou la sanction des employés. Cette distinction est fondamentale pour garantir la conformité éthique et juridique du projet.
+
+\medskip
+\noindent La figure~\ref{fig:pipeline} synthétise l'architecture complète du pipeline, de la collecte des données à la décision humaine, en indiquant les garanties éthiques et réglementaires appliquées à chaque étape.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    source/.style={draw, rounded corners=2pt, font=\footnotesize, minimum height=0.9cm, text width=2.1cm, align=center},
+    proc/.style={draw, rounded corners=2pt, font=\footnotesize, minimum height=0.7cm, text width=9cm, align=center},
+    decision/.style={draw, very thick, rounded corners=2pt, font=\footnotesize\bfseries, minimum height=0.7cm, text width=9cm, align=center},
+    note/.style={font=\scriptsize, gray, text width=3.2cm, align=left},
+    arr/.style={-{Stealth[length=3pt]}, thick}
+]
+% Data sources
+\node[source] (s1) at (-3.6,0) {Données\\générales\\{\scriptsize (24 var.)}};
+\node[source] (s2) at (-1.2,0) {Enquête\\satisfaction\\{\scriptsize (3 var.)}};
+\node[source] (s3) at (1.2,0) {Évaluation\\managériale\\{\scriptsize (2 var.)}};
+\node[source] (s4) at (3.6,0) {Données de\\badgeage\\{\scriptsize (365 jours)}};
+% Processing steps
+\node[proc] (fusion) at (0,-1.7) {Fusion via \texttt{EmployeeID} --- 4\,410 employés};
+\node[proc] (preproc) at (0,-3) {Prétraitement~: imputation, encodage, agrégation badgeage};
+\node[proc] (model) at (0,-4.3) {Modélisation (Random Forest / Gradient Boosting)};
+\node[proc] (shap) at (0,-5.6) {Explicabilité SHAP (locale et globale)};
+\node[proc] (dash) at (0,-6.9) {Tableau de bord consultatif};
+\node[decision] (rh) at (0,-8.2) {Décision humaine (responsable RH qualifié)};
+% Arrows from sources
+\draw[arr] (s1.south) -- (s1.south |- fusion.north);
+\draw[arr] (s2.south) -- (s2.south |- fusion.north);
+\draw[arr] (s3.south) -- (s3.south |- fusion.north);
+\draw[arr] (s4.south) -- (s4.south |- fusion.north);
+% Sequential arrows
+\draw[arr] (fusion) -- (preproc);
+\draw[arr] (preproc) -- (model);
+\draw[arr] (model) -- (shap);
+\draw[arr] (shap) -- (dash);
+\draw[arr] (dash) -- (rh);
+% Annotations
+\node[note, anchor=west] at (5,-1.7) {Gouvernance des données\\(RGPD, art.~5)};
+\node[note, anchor=west] at (5,-3) {Minimisation,\\pseudonymisation};
+\node[note, anchor=west] at (5,-4.3) {Validation croisée\\stratifiée, audit d'équité};
+\node[note, anchor=west] at (5,-5.6) {Transparence\\(AI Act, principes HLEG)};
+\node[note, anchor=west] at (5,-6.9) {Consultation seule,\\pas d'action automatique};
+\node[note, anchor=west] at (5,-8.2) {Art.~22 RGPD~:\\supervision humaine};
+% Dotted connecting lines
+\foreach \y in {-1.7,-3,-4.3,-5.6,-6.9,-8.2} {
+    \draw[densely dotted, gray] (4.6,\y) -- (5,\y);
+}
+\end{tikzpicture}
+\caption{Architecture du pipeline de prédiction de l'attrition avec garanties éthiques et réglementaires intégrées à chaque étape.}
+\label{fig:pipeline}
+\end{figure}
 
 % ============================================================
 \section{Conclusion}
@@ -506,54 +670,154 @@ Ce projet a permis de mener une analyse complète du turnover chez HumanForYou, 
 \newpage
 \begin{thebibliography}{99}
 
+% ── Cadre réglementaire européen ──────────────────────────────
+
+\bibitem{rgpd_officiel}
+Parlement européen et Conseil de l'Union européenne, \textit{Règlement (UE) 2016/679 relatif à la protection des personnes physiques à l'égard du traitement des données à caractère personnel et à la libre circulation de ces données (RGPD)}, Journal officiel de l'Union européenne, 27 avril 2016,
+\url{https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679}.
+\\[2pt] {\small \textsc{Concepts~:} protection des données personnelles, consentement, minimisation des données, pseudonymisation, droit d'opposition, décision automatisée (art.~22), AIPD (art.~35), registre des traitements (art.~30).}
+
 \bibitem{cnil_rgpd}
 CNIL, \textit{Comprendre le RGPD},
 \url{https://www.cnil.fr/fr/comprendre-le-rgpd}.
-
-\bibitem{cnil_securite}
-CNIL, \textit{Guide de la sécurité des données personnelles}, édition 2023,
-\url{https://www.cnil.fr/sites/cnil/files/2023-04/cnil_guide_securite_des_donnees_personnelles-2023.pdf}.
-
-\bibitem{cnil_ethique}
-CNIL, \textit{Comment permettre à l'Homme de garder la main~? Rapport sur les enjeux éthiques des algorithmes et de l'intelligence artificielle}, décembre 2017,
-\url{https://www.cnil.fr/fr/comment-permettre-lhomme-de-garder-la-main-rapport-sur-les-enjeux-ethiques-des-algorithmes-et-de}.
-
-\bibitem{cnil_lignes_directrices}
-CNIL, \textit{Lignes directrices et recommandations},
-\url{https://www.cnil.fr/en/decisions/lignes-directrices-recommandations-CNIL}.
+\\[2pt] {\small \textsc{Concepts~:} vulgarisation du RGPD, droits des personnes, obligations des responsables de traitement, bases légales.}
 
 \bibitem{ia_act}
 Parlement européen et Conseil de l'Union européenne, \textit{Règlement (UE) 2024/1689 établissant des règles harmonisées concernant l'intelligence artificielle (AI Act)}, Journal officiel, 13 juin 2024. Considérant~27,
 \url{https://artificialintelligenceact.eu/fr/recital/27/}.
+\\[2pt] {\small \textsc{Concepts~:} classification des risques IA, systèmes à haut risque (annexe~III), IA en RH, supervision humaine (art.~14), interdiction de la notation sociale (art.~5), gouvernance des données, documentation technique, sept principes HLEG.}
 
 \bibitem{eu_hleg}
 Groupe d'experts de haut niveau sur l'IA, \textit{Lignes directrices en matière d'éthique pour une IA digne de confiance}, Commission européenne, 2019,
 \url{https://ec.europa.eu/newsroom/dae/document.cfm?doc_id=60427}.
-
-\bibitem{villani}
-Villani, C. \textit{et al.}, \textit{Donner un sens à l'intelligence artificielle~: pour une stratégie nationale et européenne}, rapport au Premier ministre, mars 2018,
-\url{https://www.vie-publique.fr/rapport/37225-donner-un-sens-lintelligence-artificielle-pour-une-strategie-nation}.
-
-\bibitem{hub_france}
-Hub France IA, \textit{Guide pratique IA éthique}, version~2, décembre 2024,
-\url{https://www.hub-franceia.fr/wp-content/uploads/2024/12/Guide_pratique_IA_ethique_version-2.pdf}.
+\\[2pt] {\small \textsc{Concepts~:} sept exigences éthiques (autonomie humaine, robustesse, vie privée, transparence, diversité/équité, bien-être sociétal, responsabilité), IA centrée sur l'humain, reddition de comptes.}
 
 \bibitem{cep_ethique}
 Centre de politique européenne, \textit{Lignes directrices en matière d'éthique pour l'IA~: analyse de la communication COM(2019)~168},
 \url{https://www.cep.eu/fileadmin/user_upload/cep.eu/Analysen/COM_2019_168_Ethik_in_KI/CA_COM_2019__168__Lignes_directrices_en_matiere_d_ethique_pour_l_IA.pdf}.
+\\[2pt] {\small \textsc{Concepts~:} transparence algorithmique, confiance dans l'IA, analyse de la communication européenne sur l'éthique de l'IA.}
 
 \bibitem{ec_lignes_directrices}
 Commission européenne, \textit{Lignes directrices relatives à l'utilisation de l'intelligence artificielle}, 2022,
 \url{https://teachertaskforce.org/sites/default/files/2023-06/2022_EC_lignes-directrices-utilisation-IA_FR.pdf}.
+\\[2pt] {\small \textsc{Concepts~:} traçabilité, reddition de comptes, supervision humaine, bonnes pratiques d'utilisation de l'IA.}
 
+% ── Cadre français ────────────────────────────────────────────
 
-\bibitem{darpa_xai}
-DARPA, \textit{Explainable Artificial Intelligence (XAI) Program},
-\url{https://www.darpa.mil/research/programs/explainable-artificial-intelligence}.
+\bibitem{loi_informatique_libertes}
+Loi n°~78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, \textit{Journal officiel de la République française}, 7 janvier 1978,
+\url{https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000886460}.
+\\[2pt] {\small \textsc{Concepts~:} naissance de la protection des données en France, création de la CNIL, réaction au projet SAFARI, fichage administratif, libertés individuelles.}
+
+\bibitem{safari_lemonde}
+Boucher, P., <<~SAFARI ou la chasse aux Français~>>, \textit{Le Monde}, 21 mars 1974.
+\\[2pt] {\small \textsc{Concepts~:} projet SAFARI, interconnexion des fichiers administratifs, numéro de sécurité sociale, fichage de masse, alerte journalistique.}
+
+\bibitem{cnil_ethique}
+CNIL, \textit{Comment permettre à l'Homme de garder la main~? Rapport sur les enjeux éthiques des algorithmes et de l'intelligence artificielle}, décembre 2017,
+\url{https://www.cnil.fr/fr/comment-permettre-lhomme-de-garder-la-main-rapport-sur-les-enjeux-ethiques-des-algorithmes-et-de}.
+\\[2pt] {\small \textsc{Concepts~:} loyauté algorithmique, vigilance et réflexivité, éthique par conception, formation à l'éthique, audit des algorithmes, fonction éthique en entreprise.}
+
+\bibitem{cnil_securite}
+CNIL, \textit{Guide de la sécurité des données personnelles}, édition 2023,
+\url{https://www.cnil.fr/sites/cnil/files/2023-04/cnil_guide_securite_des_donnees_personnelles-2023.pdf}.
+\\[2pt] {\small \textsc{Concepts~:} sécurité des données, mesures techniques et organisationnelles, intégrité, confidentialité, robustesse des systèmes.}
+
+\bibitem{villani}
+Villani, C. \textit{et al.}, \textit{Donner un sens à l'intelligence artificielle~: pour une stratégie nationale et européenne}, rapport au Premier ministre, mars 2018,
+\url{https://www.vie-publique.fr/rapport/37225-donner-un-sens-lintelligence-artificielle-pour-une-strategie-nation}.
+\\[2pt] {\small \textsc{Concepts~:} stratégie nationale IA, politique des données, transformation de l'emploi, enjeux écologiques, inclusivité et diversité, complémentarité homme-machine.}
+
+\bibitem{hub_france}
+Hub France IA, \textit{Guide pratique IA éthique}, version~2, décembre 2024,
+\url{https://www.hub-franceia.fr/wp-content/uploads/2024/12/Guide_pratique_IA_ethique_version-2.pdf}.
+\\[2pt] {\small \textsc{Concepts~:} méthodologie d'audit d'équité, IA éthique en pratique, débiaisage, bonnes pratiques industrielles.}
+
+% ── Surveillance étatique et protection de la vie privée ──────
+
+\bibitem{snowden_greenwald}
+Greenwald, G. et MacAskill, E., <<~NSA Prism program taps in to user data of Apple, Google and others~>>, \textit{The Guardian}, 7 juin 2013,
+\url{https://www.theguardian.com/world/2013/jun/06/us-tech-giants-nsa-data}.
+\\[2pt] {\small \textsc{Concepts~:} programme PRISM, surveillance de masse, NSA, XKeyscore, révélations Snowden, collecte de données sans consentement, accélération du RGPD.}
+
+\bibitem{clearview_cnil}
+CNIL, \textit{Reconnaissance faciale~: la CNIL sanctionne Clearview AI d'une amende de 20~millions d'euros}, 20 octobre 2022,
+\url{https://www.cnil.fr/fr/reconnaissance-faciale-la-cnil-met-en-demeure-clearview-ai-de-cesser-la-reutilisation-de}.
+\\[2pt] {\small \textsc{Concepts~:} reconnaissance faciale, collecte biométrique sans consentement, 3~milliards d'images, surveillance dans l'espace public, sanction CNIL.}
+
+% ── Scandales de données et manipulation ──────────────────────
+
+\bibitem{cambridge_analytica}
+Cadwalladr, C. et Graham-Harrison, E., <<~Revealed: 50 million Facebook profiles harvested for Cambridge Analytica in major data breach~>>, \textit{The Guardian}, 17 mars 2018,
+\url{https://www.theguardian.com/news/2018/mar/17/cambridge-analytica-facebook-influence-us-election}.
+\\[2pt] {\small \textsc{Concepts~:} exploitation abusive de données personnelles, profilage psychologique, manipulation électorale, 87~millions d'utilisateurs Facebook, amende FTC de 5~milliards de dollars.}
+
+% ── Biais algorithmiques et équité ───────────────────────────
+
+\bibitem{propublica_compas}
+Angwin, J., Larson, J., Mattu, S. et Kirchner, L., <<~Machine Bias: There's software used across the country to predict future criminals. And it's biased against blacks~>>, \textit{ProPublica}, 23 mai 2016,
+\url{https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing}.
+\\[2pt] {\small \textsc{Concepts~:} biais racial algorithmique, COMPAS, prédiction de récidive, faux positifs disproportionnés, opacité des systèmes de scoring, justice prédictive.}
+
+\bibitem{chouldechova_2017}
+Chouldechova, A., <<~Fair prediction with disparate impact: A study of bias in recidivism prediction instruments~>>, \textit{Big Data}, vol.~5, n°~2, pp.~153--163, 2017. DOI~: 10.1089/big.2016.0047.
+\\[2pt] {\small \textsc{Concepts~:} théorème d'impossibilité de l'équité, incompatibilité des métriques de fairness, parité démographique vs calibration, choix éthique explicite.}
+
+\bibitem{kleinberg_2016}
+Kleinberg, J., Mullainathan, S. et Raghavan, M., <<~Inherent Trade-Offs in the Fair Determination of Risk Scores~>>, \textit{Proceedings of Innovations in Theoretical Computer Science (ITCS)}, 2017. arXiv:1609.05807,
+\url{https://arxiv.org/abs/1609.05807}.
+\\[2pt] {\small \textsc{Concepts~:} compromis fondamentaux en équité algorithmique, scores de risque, impossibilité de satisfaire simultanément calibration, équité prédictive et égalité des chances.}
+
+\bibitem{amazon_reuters}
+Dastin, J., <<~Amazon scraps secret AI recruiting tool that showed bias against women~>>, \textit{Reuters}, 10 octobre 2018,
+\url{https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G}.
+\\[2pt] {\small \textsc{Concepts~:} biais de genre en recrutement IA, données d'entraînement biaisées, discrimination algorithmique indirecte, CV et biais sexistes, abandon de système IA.}
 
 \bibitem{quantmetry}
 Quantmetry (Capgemini), \textit{Intelligence artificielle et éthique~: comment définir et mesurer l'équité algorithmique},
 \url{https://www.quantmetry.com/blog/intelligence-artificielle-et-ethique-comment-definir-et-mesurer-lequite-algorithmique/}.
+\\[2pt] {\small \textsc{Concepts~:} définitions formelles de l'équité (parité démographique, égalité des chances, calibration), équité individuelle, métriques de fairness, mesure des biais.}
+
+% ── Dérives en milieu professionnel ──────────────────────────
+
+\bibitem{uber_algo}
+Rosenblat, A. et Stark, L., <<~Algorithmic Labor and Information Asymmetries: A Case Study of Uber's Drivers~>>, \textit{International Journal of Communication}, vol.~10, pp.~3758--3784, 2016,
+\url{https://ijoc.org/index.php/ijoc/article/view/4892}.
+\\[2pt] {\small \textsc{Concepts~:} manipulation algorithmique des travailleurs, asymétrie d'information, prédiction d'attrition détournée, incitations ciblées, contrôle social par l'algorithme.}
+
+\bibitem{hirevue_epic}
+Electronic Privacy Information Center (EPIC), \textit{Complaint and Request for Investigation of HireVue, Inc.}, déposé auprès de la Federal Trade Commission, 6 novembre 2019,
+\url{https://epic.org/documents/in-re-hirevue/}.
+\\[2pt] {\small \textsc{Concepts~:} analyse faciale en recrutement, entretien vidéo automatisé, opacité algorithmique, plainte pour pratiques déloyales, abandon de la reconnaissance faciale (2021).}
+
+\bibitem{barclays_surveillance}
+Booth, R., <<~Barclays using 'Big Brother' tactics to spy on staff, says TUC~>>, \textit{The Guardian}, 20 février 2020,
+\url{https://www.theguardian.com/business/2020/feb/20/barclays-using-dystopian-big-brother-tactics-to-spy-on-staff-says-tuc}.
+\\[2pt] {\small \textsc{Concepts~:} surveillance des employés, traçage de la productivité en temps réel, limites de la surveillance algorithmique au travail, intervention de l'ICO.}
+
+% ── Cadre indien ──────────────────────────────────────────────
+
+\bibitem{dpdpa_india}
+Government of India, \textit{Digital Personal Data Protection Act, 2023} (Act No.~22 of 2023), \textit{The Gazette of India}, 11 août 2023,
+\url{https://www.meity.gov.in/writereaddata/files/Digital\%20Personal\%20Data\%20Protection\%20Act\%202023.pdf}.
+\\[2pt] {\small \textsc{Concepts~:} protection des données personnelles en Inde, consentement, droits des personnes, contexte Aadhaar, pression internationale post-RGPD.}
+
+% ── Explicabilité et interprétabilité des modèles ────────────
+
+\bibitem{darpa_xai}
+DARPA, \textit{Explainable Artificial Intelligence (XAI) Program},
+\url{https://www.darpa.mil/research/programs/explainable-artificial-intelligence}.
+\\[2pt] {\small \textsc{Concepts~:} explicabilité des modèles d'IA, justification des décisions algorithmiques, confiance opérateur-machine, origine des méthodes post-hoc (SHAP, LIME).}
+
+\bibitem{lundberg_shap}
+Lundberg, S.M. et Lee, S.-I., <<~A Unified Approach to Interpreting Model Predictions~>>, \textit{Advances in Neural Information Processing Systems (NeurIPS)}, vol.~30, 2017,
+\url{https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html}.
+\\[2pt] {\small \textsc{Concepts~:} SHAP (SHapley Additive exPlanations), valeurs de Shapley, explicabilité locale et globale, contribution individuelle des variables, interprétation des modèles ensemblistes.}
+
+\bibitem{ribeiro_lime}
+Ribeiro, M.T., Singh, S. et Guestrin, C., <<~`Why Should I Trust You?': Explaining the Predictions of Any Classifier~>>, \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, pp.~1135--1144, 2016. DOI~: 10.1145/2939672.2939778,
+\url{https://doi.org/10.1145/2939672.2939778}.
+\\[2pt] {\small \textsc{Concepts~:} LIME (Local Interpretable Model-agnostic Explanations), explicabilité locale, approximation linéaire locale, interprétabilité model-agnostic, confiance dans les classifieurs.}
 
 \end{thebibliography}
 
