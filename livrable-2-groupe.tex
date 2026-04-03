@@ -182,6 +182,48 @@ $$\hat{x}_i^{(\text{col})} = \frac{1}{k} \sum_{j \in \mathcal{N}_k(x_i)} x_j^{(\
 
 \paragraph{Normalisation} Les variables numériques continues sont standardisées (centrage-réduction, $\mu = 0$, $\sigma = 1$) via \texttt{StandardScaler}. Les variables binaires, ordinales et la variable cible ne sont pas normalisées.
 
+\subsection{Feature Engineering --- Remplacement des variables colinéaires par des ratios métier}
+
+L'analyse de corrélation révèle plusieurs groupes de variables fortement colinéaires :
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{llc}
+\toprule
+\textbf{Groupe} & \textbf{Variables corrélées} & \textbf{Corrélation} \\
+\midrule
+\multirow{2}{*}{Ancienneté} & \texttt{YearsAtCompany} $\leftrightarrow$ \texttt{YearsWithCurrManager} & 0{,}77 \\
+ & \texttt{YearsAtCompany} $\leftrightarrow$ \texttt{YearsSinceLastPromotion} & 0{,}62 \\
+Expérience & \texttt{Age} $\leftrightarrow$ \texttt{TotalWorkingYears} & 0{,}68 \\
+\multirow{2}{*}{Badgeage} & \texttt{avg\_out\_hour} $\leftrightarrow$ \texttt{avg\_work\_hours} & 1{,}00 \\
+ & \texttt{nb\_days\_present} $\leftrightarrow$ \texttt{nb\_days\_absent} & $-$1{,}00 \\
+\bottomrule
+\end{tabular}
+\caption{Groupes de variables colinéaires identifiés.}
+\end{table}
+
+\paragraph{Stratégie} Plutôt que de supprimer ces colonnes et perdre de l'information, nous les \textbf{croisons pour créer des ratios métier} interprétables par les RH. Ces ratios capturent la \textit{relation} entre les variables (par exemple, la proportion de carrière passée dans l'entreprise) plutôt que leurs valeurs brutes, ce qui casse la colinéarité tout en enrichissant le signal prédictif.
+
+\begin{table}[ht]
+\centering
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Nouvelle variable} & \textbf{Formule} & \textbf{Interprétation RH} \\
+\midrule
+\texttt{ManagerStability} & $\dfrac{\texttt{YearsWithCurrManager}}{\texttt{YearsAtCompany} + 1}$ & Proportion de l'ancienneté passée avec le même manager --- une valeur faible indique une instabilité managériale \\[6pt]
+\texttt{PromotionStagnation} & $\dfrac{\texttt{YearsSinceLastPromotion}}{\texttt{YearsAtCompany} + 1}$ & Proportion du temps <<~bloqué~>> sans promotion --- une valeur élevée traduit un risque de frustration \\[6pt]
+\texttt{CompanyLoyalty} & $\dfrac{\texttt{YearsAtCompany}}{\texttt{TotalWorkingYears} + 1}$ & Part de la carrière passée dans l'entreprise --- une valeur élevée indique un employé fidèle \\[6pt]
+\texttt{CareerMaturity} & $\dfrac{\texttt{TotalWorkingYears}}{\texttt{Age} + 1}$ & Progression de carrière rapportée à l'âge \\[6pt]
+\texttt{JobHoppingRate} & $\dfrac{\texttt{NumCompaniesWorked}}{\texttt{TotalWorkingYears} + 1}$ & Fréquence de changement d'entreprise --- signal classique d'attrition en RH \\
+\bottomrule
+\end{tabularx}
+\caption{Variables croisées créées à partir des groupes colinéaires.}
+\end{table}
+
+Les 5 variables originales remplacées (\texttt{Age}, \texttt{TotalWorkingYears}, \texttt{YearsWithCurrManager}, \texttt{YearsSinceLastPromotion}, \texttt{NumCompaniesWorked}) sont supprimées, ainsi que les 2 variables parfaitement redondantes (\texttt{avg\_out\_hour}, \texttt{nb\_days\_absent}). La variable \texttt{YearsAtCompany} est conservée car elle apparaît dans les ratios comme dénominateur mais reste porteuse d'un signal propre (ancienneté brute).
+
+\paragraph{Résultat} Bilan net : 5 nouvelles features créées, 7 colonnes supprimées ($-2$ colonnes). L'analyse VIF post-feature engineering confirme que la multicolinéarité est résolue (tous les VIF $\leq 5$).
+
 % ============================================================
 \section{Modélisation}
 
@@ -194,6 +236,12 @@ $$\hat{x}_i^{(\text{col})} = \frac{1}{k} \sum_{j \in \mathcal{N}_k(x_i)} x_j^{(\
     \item Régression logistique et Random Forest : \texttt{class\_weight="balanced"}
     \item MLP : \texttt{compute\_sample\_weight("balanced")} appliqué en poids d'entraînement
 \end{itemize}
+
+\paragraph{Optimisation des hyperparamètres par Grid Search} Plutôt que de fixer les hyperparamètres manuellement, nous utilisons une \textbf{recherche par grille} (\texttt{GridSearchCV}) pour chaque modèle. Le principe est de définir un ensemble de combinaisons d'hyperparamètres à tester : pour chaque combinaison, le modèle est entraîné et évalué par \textbf{validation croisée stratifiée à 5 folds} sur le jeu d'entraînement. La combinaison produisant le meilleur score est retenue, puis le modèle final est ré-entraîné sur l'ensemble du jeu d'entraînement avec ces hyperparamètres optimaux.
+
+La métrique d'optimisation choisie est le \textbf{F1-score}, car notre jeu de données est déséquilibré (16\,\% d'attrition). Le F1 est la moyenne harmonique de la précision et du rappel :
+$$F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
+Il pénalise les modèles qui sacrifient l'un de ces deux critères au profit de l'autre, ce qui est adapté à un contexte où les faux négatifs (employés à risque non détectés) et les faux positifs (fausses alertes) ont tous deux un coût.
 
 % ------ Modèle 1 ------
 \subsection{Modèle 1 : Régression Logistique}
@@ -209,7 +257,9 @@ $$\mathcal{L}(\mathbf{w}) = -\frac{1}{n} \sum_{i=1}^{n} \left[ y_i \log(\hat{p}_
 
 \paragraph{Analyse de multicolinéarité (VIF)} La régression logistique étant sensible à la multicolinéarité (coefficients instables), nous calculons le \textbf{Variance Inflation Factor} pour chaque feature :
 $$\text{VIF}_j = \frac{1}{1 - R_j^2}$$
-Les features avec un VIF > 5 sont supprimées itérativement jusqu'à élimination de toute multicolinéarité problématique. Cette sélection ne s'applique qu'à la régression logistique ; les modèles ensemblistes et le MLP ne sont pas affectés par ce phénomène.
+Grâce au feature engineering réalisé en §3.5 (remplacement des variables colinéaires par des ratios métier), la multicolinéarité est déjà résolue à cette étape (tous les VIF $\leq 5$). Une vérification post-feature engineering confirme qu'aucune suppression itérative n'est nécessaire.
+
+\paragraph{Hyperparamètres optimisés par Grid Search} La grille explorée porte sur le paramètre de régularisation $C \in \{0{,}01;\, 0{,}1;\, 1;\, 10;\, 100\}$ et le solveur $\in \{\text{lbfgs},\, \text{liblinear}\}$, avec pénalité L2 et \texttt{class\_weight=balanced}. La meilleure combinaison est sélectionnée par \texttt{GridSearchCV} (F1, 5 folds stratifiés).
 
 \paragraph{Rôle} Baseline interprétable. Permet de vérifier que les modèles plus complexes apportent un gain réel.
 
@@ -223,23 +273,25 @@ Les features avec un VIF > 5 sont supprimées itérativement jusqu'à éliminati
 \paragraph{Théorie} Le Random Forest est un ensemble de $B$ arbres de décision entraînés sur des échantillons bootstrap. Chaque arbre ne considère qu'un sous-ensemble aléatoire de $m = \sqrt{p}$ features à chaque n\oe ud. La prédiction finale est le vote majoritaire :
 $$\hat{y} = \text{mode}\left\{ h_b(\mathbf{x}) \right\}_{b=1}^{B}$$
 
-\paragraph{Hyperparamètres}
+\paragraph{Hyperparamètres optimisés par Grid Search}
 
 \begin{table}[ht]
 \centering
 \begin{tabular}{lll}
 \toprule
-\textbf{Paramètre} & \textbf{Valeur} & \textbf{Justification} \\
+\textbf{Paramètre} & \textbf{Grille explorée} & \textbf{Justification} \\
 \midrule
-\texttt{n\_estimators} & 300 & Bon compromis performance/temps \\
-\texttt{max\_depth} & 12 & Limite la profondeur pour éviter le surapprentissage \\
-\texttt{min\_samples\_split} & 10 & Régularisation \\
-\texttt{min\_samples\_leaf} & 4 & Régularisation \\
+\texttt{n\_estimators} & \{100, 200, 300\} & Nombre d'arbres \\
+\texttt{max\_depth} & \{8, 12, 16, None\} & Profondeur maximale (régularisation) \\
+\texttt{min\_samples\_split} & \{5, 10, 15\} & Taille min. pour diviser un n\oe ud \\
+\texttt{min\_samples\_leaf} & \{2, 4, 8\} & Taille min. d'une feuille \\
 \texttt{class\_weight} & balanced & Gestion du déséquilibre 16/84 \\
 \bottomrule
 \end{tabular}
-\caption{Hyperparamètres du Random Forest.}
+\caption{Grille d'hyperparamètres du Random Forest (optimisation par Grid Search, scoring = F1).}
 \end{table}
+
+La meilleure combinaison est sélectionnée automatiquement par \texttt{GridSearchCV} selon le F1-score en validation croisée stratifiée à 5 folds.
 
 \paragraph{Feature importance} Le Random Forest fournit nativement une mesure d'importance des variables (\textit{Mean Decrease in Impurity}). Cette information est complétée par l'analyse SHAP en section~\ref{sec:shap}.
 
@@ -253,24 +305,27 @@ $$\hat{y} = \text{mode}\left\{ h_b(\mathbf{x}) \right\}_{b=1}^{B}$$
 \paragraph{Théorie} Le MLP est un réseau de neurones composé de couches successives. Chaque neurone calcule $a = \phi(\mathbf{w}^T \mathbf{x} + b)$ où $\phi$ est une fonction d'activation non-linéaire (ReLU : $\phi(z) = \max(0, z)$). L'entraînement se fait par rétropropagation du gradient avec l'optimiseur Adam :
 $$\mathbf{w} \leftarrow \mathbf{w} - \eta \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$$
 
-\paragraph{Architecture et hyperparamètres}
+\paragraph{Architecture et hyperparamètres optimisés par Grid Search}
 
 \begin{table}[ht]
 \centering
 \begin{tabular}{lll}
 \toprule
-\textbf{Paramètre} & \textbf{Valeur} & \textbf{Justification} \\
+\textbf{Paramètre} & \textbf{Grille explorée} & \textbf{Justification} \\
 \midrule
-\texttt{hidden\_layer\_sizes} & (64, 32, 16) & 3 couches, réduction progressive \\
-\texttt{activation} & ReLU & Standard pour les couches cachées \\
-\texttt{solver} & Adam & Optimiseur adaptatif \\
-\texttt{learning\_rate} & adaptive & Réduit le LR quand la loss stagne \\
-\texttt{early\_stopping} & True & Prévient le surapprentissage \\
-\texttt{n\_iter\_no\_change} & 20 & Patience avant arrêt \\
+\texttt{hidden\_layer\_sizes} & \{(64,32), (64,32,16), (128,64,32)\} & Architecture du réseau \\
+\texttt{activation} & \{relu, tanh\} & Fonction d'activation \\
+\texttt{learning\_rate\_init} & \{0{,}001, 0{,}01\} & Taux d'apprentissage initial \\
+\texttt{alpha} & \{0{,}0001, 0{,}001, 0{,}01\} & Régularisation L2 \\
+\texttt{solver} & Adam & Optimiseur adaptatif (fixe) \\
+\texttt{early\_stopping} & True & Prévient le surapprentissage (fixe) \\
+\texttt{n\_iter\_no\_change} & 20 & Patience avant arrêt (fixe) \\
 \bottomrule
 \end{tabular}
-\caption{Hyperparamètres du MLP.}
+\caption{Grille d'hyperparamètres du MLP (optimisation par Grid Search, scoring = F1).}
 \end{table}
+
+La meilleure combinaison est sélectionnée par \texttt{GridSearchCV} (F1, 5 folds stratifiés). Les paramètres marqués <<~fixe~>> ne sont pas explorés mais choisis par convention.
 
 \paragraph{Gestion du déséquilibre} Le \texttt{MLPClassifier} de scikit-learn ne dispose pas de paramètre \texttt{class\_weight}. Nous calculons des poids d'échantillon via \texttt{compute\_sample\_weight("balanced")} et les passons lors de l'entraînement.
 
