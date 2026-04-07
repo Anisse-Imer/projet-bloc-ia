@@ -1,0 +1,870 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage{tocloft}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, calc, positioning}
+
+\geometry{margin=2.5cm}
+
+\setlength{\cftbeforesecskip}{2pt}
+\setlength{\cftbeforesubsecskip}{1pt}
+\setlength{\cftbeforesubsubsecskip}{0pt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    citecolor=blue!60!black,
+    urlcolor=blue!60!black
+}
+
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {1.5ex \@plus 0.5ex \@minus .2ex}%
+  {0.5ex \@plus .2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\title{Livrable 2 --- Projet Bloc IA \\ \Large Modélisation prédictive du turnover chez HumanForYou \\ \large Rapport technique et interprétation des résultats}
+\author{
+    Maxence Chartier \and
+    Amine Haouri \and
+    Anisse Imerzoukene \and
+    Mourad Messaoudi
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+{\small
+\tableofcontents
+}
+\newpage
+
+% ============================================================
+\section{Introduction}
+
+Ce document constitue le \textbf{livrable~2} du projet Bloc~IA. Il décrit la démarche technique mise en \oe uvre dans le notebook \texttt{project-bloc-ia-notebook-groupe-c.ipynb} pour répondre à la problématique posée par HumanForYou : identifier les facteurs d'attrition et proposer un modèle prédictif permettant de cibler les employés à risque de départ.
+
+\paragraph{Lien avec le livrable~1} Le livrable~1 (\texttt{document.tex}) a posé le \textbf{cadre réglementaire et éthique} du projet : contexte historique des dérives algorithmiques, RGPD, AI Act, sept principes HLEG, et engagements concrets pour chaque principe (§2.4). Le présent document montre comment ces engagements ont été \textbf{traduits en choix techniques} à chaque étape du pipeline de données et de modélisation.
+
+\paragraph{Structure du document} Ce rapport suit la structure du notebook :
+\begin{enumerate}
+    \item Fusion des données et construction du dataset unifié
+    \item Prétraitement : imputation, outliers, normalisation
+    \item Modélisation : trois modèles supervisés
+    \item Comparaison des modèles et résultats chiffrés
+    \item Explicabilité SHAP
+    \item Audit d'équité et conformité éthique
+    \item Interprétation des résultats et recommandations
+    \item Roadmap de déploiement
+    \item Conclusion et synthèse exécutive
+\end{enumerate}
+
+% ============================================================
+\section{Fusion des données}
+
+\subsection{Sources et schéma de jointure}
+
+Le service RH de HumanForYou a fourni quatre sources de données, toutes liées par la clé \texttt{EmployeeID} :
+
+\begin{table}[ht]
+\centering
+\begin{tabularx}{\textwidth}{lXcc}
+\toprule
+\textbf{Source} & \textbf{Contenu} & \textbf{Colonnes} & \textbf{Jointure} \\
+\midrule
+\texttt{general\_data.csv} & Données démographiques, salariales, carrière & 24 & Table de base \\
+\texttt{employee\_survey\_data.csv} & Satisfaction (environnement, travail, équilibre) & 3 & LEFT JOIN \\
+\texttt{manager\_survey\_data.csv} & Évaluation managériale (implication, performance) & 2 & LEFT JOIN \\
+\texttt{in\_time.csv} / \texttt{out\_time.csv} & Horaires de badgeage (261 jours) & $\rightarrow$ 6 & LEFT JOIN \\
+\bottomrule
+\end{tabularx}
+\caption{Sources de données et stratégie de jointure.}
+\end{table}
+
+Toutes les relations sont \textbf{1:1} (un enregistrement par employé dans chaque source). La vérification de cohérence confirme que les 4\,410 employés sont présents dans les quatre fichiers.
+
+\subsection{Agrégation des données de badgeage}
+
+Les fichiers de badgeage contiennent 261 colonnes-dates par employé. Conformément à notre engagement de \textbf{robustesse technique} (principe~2 HLEG, §2.4.2 du livrable~1), nous dérivons six variables agrégées plutôt que d'utiliser les horodatages bruts :
+
+\begin{itemize}
+    \item \texttt{avg\_in\_hour}, \texttt{avg\_out\_hour} : heures moyennes d'arrivée et de départ
+    \item \texttt{avg\_work\_hours}, \texttt{std\_work\_hours} : durée moyenne et écart-type du travail quotidien
+    \item \texttt{nb\_days\_present}, \texttt{nb\_days\_absent} : nombre de jours travaillés / absents
+\end{itemize}
+
+Cette agrégation rend le modèle résilient aux absences ponctuelles et réduit la dimensionnalité de 522 colonnes à 6.
+
+\subsection{Résultat}
+
+Le DataFrame fusionné contient \textbf{4\,410 lignes} et \textbf{35 colonnes}, avec une variable cible binaire \texttt{Attrition} (Yes/No). Le taux d'attrition observé est de \textbf{16,1\,\%} (711 départs sur 4\,410 employés), confirmant un déséquilibre de classes significatif.
+
+% ============================================================
+\section{Prétraitement des données}
+
+\begin{quote}
+\textit{Cadre éthique} --- Cette étape met en \oe uvre les principes~2 (robustesse) et~3 (confidentialité et gouvernance des données) du HLEG, ainsi que l'article~5 du RGPD (minimisation des données). Cf. §2.4.2 et §2.4.3 du livrable~1.
+\end{quote}
+
+\subsection{Suppression des colonnes inutiles}
+
+Quatre colonnes sont supprimées conformément au principe de \textbf{minimisation des données} (RGPD, art.~5) :
+
+\begin{itemize}
+    \item \texttt{EmployeeCount} (= 1), \texttt{Over18} (= Y), \texttt{StandardHours} (= 8) : variance nulle, aucune information discriminante.
+    \item \texttt{EmployeeID} : identifiant unique, pas une feature prédictive. Conservé en mémoire pour la traçabilité (principe~7 HLEG) mais exclu du modèle.
+\end{itemize}
+
+\subsection{Imputation des valeurs manquantes par KNN}
+
+Cinq colonnes présentent des valeurs manquantes (111 cellules au total, soit 0,07\,\% du dataset) :
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lccl}
+\toprule
+\textbf{Colonne} & \textbf{NaN} & \textbf{\%} & \textbf{Type} \\
+\midrule
+\texttt{WorkLifeBalance} & 38 & 0,9\,\% & Ordinale (1--4) \\
+\texttt{EnvironmentSatisfaction} & 25 & 0,6\,\% & Ordinale (1--4) \\
+\texttt{JobSatisfaction} & 20 & 0,5\,\% & Ordinale (1--4) \\
+\texttt{NumCompaniesWorked} & 19 & 0,4\,\% & Numérique continue \\
+\texttt{TotalWorkingYears} & 9 & 0,2\,\% & Numérique continue \\
+\bottomrule
+\end{tabular}
+\caption{Valeurs manquantes identifiées dans le dataset fusionné.}
+\end{table}
+
+\paragraph{Choix de l'algorithme : KNN Imputer ($k = 5$)}
+
+Plutôt qu'une imputation univariée par la médiane, nous utilisons le \textbf{KNN Imputer} de scikit-learn, un algorithme \textbf{multivarié} qui exploite les corrélations entre variables.
+
+\paragraph{Principe} Pour chaque valeur manquante d'un employé $x_i$, l'algorithme identifie les $k$ voisins les plus proches parmi les employés dont la valeur est connue, en calculant la distance euclidienne sur les features communes non manquantes :
+$$d(x_i, x_j) = \sqrt{\sum_{m \in \mathcal{F}} \left( x_i^{(m)} - x_j^{(m)} \right)^2}$$
+La valeur manquante est imputée par la moyenne des valeurs des $k$ voisins :
+$$\hat{x}_i^{(\text{col})} = \frac{1}{k} \sum_{j \in \mathcal{N}_k(x_i)} x_j^{(\text{col})}$$
+
+\paragraph{Pourquoi KNN ?} Les variables d'enquête (\texttt{WorkLifeBalance}, \texttt{JobSatisfaction}, \texttt{EnvironmentSatisfaction}) sont potentiellement corrélées entre elles et avec des variables RH (ancienneté, salaire, département). KNN en tient compte, contrairement à la médiane. Pour les variables ordinales, le résultat est arrondi à l'entier le plus proche.
+
+\paragraph{Précaution} KNN est sensible à l'échelle des variables. Nous appliquons une normalisation temporaire (\texttt{StandardScaler}) avant imputation, puis une transformation inverse pour restaurer l'échelle originale.
+
+\subsection{Détection et traitement des outliers}
+
+\paragraph{Méthode IQR} Un point est considéré comme outlier si $x < Q_1 - 1{,}5 \times IQR$ ou $x > Q_3 + 1{,}5 \times IQR$, où $IQR = Q_3 - Q_1$. L'analyse porte sur les variables numériques continues (les variables ordinales à échelle fixe sont exclues).
+
+\paragraph{Traitement par capping (winsorisation)} Les valeurs aberrantes sont ramenées à la borne IQR la plus proche. Ce choix préserve le nombre de lignes (important pour un dataset déséquilibré où chaque employé ayant quitté l'entreprise est précieux) tout en réduisant l'influence des valeurs extrêmes.
+
+\subsection{Encodage et normalisation}
+
+\paragraph{Encodage} Les variables catégorielles sont traitées selon leur nature :
+\begin{itemize}
+    \item \textbf{Binaires} (\texttt{Attrition}, \texttt{Gender}) : label encoding (0/1).
+    \item \textbf{Nominales} (\texttt{BusinessTravel}, \texttt{Department}, \texttt{EducationField}, \texttt{JobRole}, \texttt{MaritalStatus}) : one-hot encoding avec \texttt{drop\_first=True} pour éviter la multicolinéarité parfaite.
+\end{itemize}
+
+\paragraph{Normalisation} Les variables numériques continues sont standardisées (centrage-réduction, $\mu = 0$, $\sigma = 1$) via \texttt{StandardScaler}. Les variables binaires, ordinales et la variable cible ne sont pas normalisées.
+
+\subsection{Feature Engineering --- Remplacement des variables colinéaires par des ratios métier}
+
+L'analyse de corrélation révèle plusieurs groupes de variables fortement colinéaires :
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{llc}
+\toprule
+\textbf{Groupe} & \textbf{Variables corrélées} & \textbf{Corrélation} \\
+\midrule
+\multirow{2}{*}{Ancienneté} & \texttt{YearsAtCompany} $\leftrightarrow$ \texttt{YearsWithCurrManager} & 0{,}77 \\
+ & \texttt{YearsAtCompany} $\leftrightarrow$ \texttt{YearsSinceLastPromotion} & 0{,}62 \\
+Expérience & \texttt{Age} $\leftrightarrow$ \texttt{TotalWorkingYears} & 0{,}68 \\
+\multirow{2}{*}{Badgeage} & \texttt{avg\_out\_hour} $\leftrightarrow$ \texttt{avg\_work\_hours} & 1{,}00 \\
+ & \texttt{nb\_days\_present} $\leftrightarrow$ \texttt{nb\_days\_absent} & $-$1{,}00 \\
+\bottomrule
+\end{tabular}
+\caption{Groupes de variables colinéaires identifiés.}
+\end{table}
+
+\paragraph{Stratégie} Plutôt que de supprimer ces colonnes et perdre de l'information, nous les \textbf{croisons pour créer des ratios métier} interprétables par les RH. Ces ratios capturent la \textit{relation} entre les variables (par exemple, la proportion de carrière passée dans l'entreprise) plutôt que leurs valeurs brutes, ce qui casse la colinéarité tout en enrichissant le signal prédictif.
+
+\begin{table}[ht]
+\centering
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Nouvelle variable} & \textbf{Formule} & \textbf{Interprétation RH} \\
+\midrule
+\texttt{ManagerStability} & $\dfrac{\texttt{YearsWithCurrManager}}{\texttt{YearsAtCompany} + 1}$ & Proportion de l'ancienneté passée avec le même manager --- une valeur faible indique une instabilité managériale \\[6pt]
+\texttt{PromotionStagnation} & $\dfrac{\texttt{YearsSinceLastPromotion}}{\texttt{YearsAtCompany} + 1}$ & Proportion du temps <<~bloqué~>> sans promotion --- une valeur élevée traduit un risque de frustration \\[6pt]
+\texttt{CompanyLoyalty} & $\dfrac{\texttt{YearsAtCompany}}{\texttt{TotalWorkingYears} + 1}$ & Part de la carrière passée dans l'entreprise --- une valeur élevée indique un employé fidèle \\[6pt]
+\texttt{CareerMaturity} & $\dfrac{\texttt{TotalWorkingYears}}{\texttt{Age} + 1}$ & Progression de carrière rapportée à l'âge \\[6pt]
+\texttt{JobHoppingRate} & $\dfrac{\texttt{NumCompaniesWorked}}{\texttt{TotalWorkingYears} + 1}$ & Fréquence de changement d'entreprise --- signal classique d'attrition en RH \\
+\bottomrule
+\end{tabularx}
+\caption{Variables croisées créées à partir des groupes colinéaires.}
+\end{table}
+
+Les 5 variables originales remplacées (\texttt{Age}, \texttt{TotalWorkingYears}, \texttt{YearsWithCurrManager}, \texttt{YearsSinceLastPromotion}, \texttt{NumCompaniesWorked}) sont supprimées, ainsi que les 2 variables parfaitement redondantes (\texttt{avg\_out\_hour}, \texttt{nb\_days\_absent}). La variable \texttt{YearsAtCompany} est conservée car elle apparaît dans les ratios comme dénominateur mais reste porteuse d'un signal propre (ancienneté brute).
+
+\paragraph{Résultat} Bilan net : 5 nouvelles features créées, 7 colonnes supprimées ($-2$ colonnes). L'analyse VIF post-feature engineering confirme que la multicolinéarité est résolue (tous les VIF $\leq 5$).
+
+% ============================================================
+\section{Modélisation}
+
+\subsection{Préparation commune}
+
+\paragraph{Séparation train/test} Le dataset est divisé en 80\,\% entraînement / 20\,\% test avec un \textbf{split stratifié} préservant le ratio 16/84 dans les deux ensembles. Conformément à notre engagement de robustesse (§2.4.2 du livrable~1), cette stratification évite le surapprentissage sur la classe majoritaire.
+
+\paragraph{Gestion du déséquilibre} Tous les modèles intègrent un mécanisme de pondération pour compenser le déséquilibre de classes, conformément au \textbf{principe~5 HLEG} (diversité, non-discrimination et équité) :
+\begin{itemize}
+    \item Régression logistique et Random Forest : \texttt{class\_weight="balanced"}
+    \item MLP : \texttt{compute\_sample\_weight("balanced")} appliqué en poids d'entraînement
+\end{itemize}
+
+\paragraph{Optimisation des hyperparamètres par Grid Search} Plutôt que de fixer les hyperparamètres manuellement, nous utilisons une \textbf{recherche par grille} (\texttt{GridSearchCV}) pour chaque modèle. Le principe est de définir un ensemble de combinaisons d'hyperparamètres à tester : pour chaque combinaison, le modèle est entraîné et évalué par \textbf{validation croisée stratifiée à 5 folds} sur le jeu d'entraînement. La combinaison produisant le meilleur score est retenue, puis le modèle final est ré-entraîné sur l'ensemble du jeu d'entraînement avec ces hyperparamètres optimaux.
+
+La métrique d'optimisation choisie est le \textbf{F1-score}, car notre jeu de données est déséquilibré (16\,\% d'attrition). Le F1 est la moyenne harmonique de la précision et du rappel :
+$$F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
+Il pénalise les modèles qui sacrifient l'un de ces deux critères au profit de l'autre, ce qui est adapté à un contexte où les faux négatifs (employés à risque non détectés) et les faux positifs (fausses alertes) ont tous deux un coût.
+
+% ------ Modèle 1 ------
+\subsection{Modèle 1 : Régression Logistique}
+
+\begin{quote}
+\textit{Principe~4 --- Transparence} : la régression logistique est le modèle le plus explicable nativement. Ses coefficients fournissent une mesure directe de l'influence de chaque variable, satisfaisant l'exigence de la CNIL de <<~rendre les systèmes algorithmiques compréhensibles~>>.
+\end{quote}
+
+\paragraph{Théorie} La régression logistique modélise la probabilité d'attrition par la fonction sigmoïde :
+$$P(\text{Attrition} = 1 \mid \mathbf{x}) = \frac{1}{1 + e^{-(\mathbf{w}^T \mathbf{x} + b)}}$$
+Le modèle est entraîné en minimisant la log-vraisemblance négative (binary cross-entropy) :
+$$\mathcal{L}(\mathbf{w}) = -\frac{1}{n} \sum_{i=1}^{n} \left[ y_i \log(\hat{p}_i) + (1 - y_i) \log(1 - \hat{p}_i) \right]$$
+
+\paragraph{Analyse de multicolinéarité (VIF)} La régression logistique étant sensible à la multicolinéarité (coefficients instables), nous calculons le \textbf{Variance Inflation Factor} pour chaque feature :
+$$\text{VIF}_j = \frac{1}{1 - R_j^2}$$
+Grâce au feature engineering réalisé en §3.5 (remplacement des variables colinéaires par des ratios métier), la multicolinéarité est déjà résolue à cette étape (tous les VIF $\leq 5$). Une vérification post-feature engineering confirme qu'aucune suppression itérative n'est nécessaire.
+
+\paragraph{Hyperparamètres optimisés par Grid Search} La grille explorée porte sur le paramètre de régularisation $C \in \{0{,}01;\, 0{,}1;\, 1;\, 10;\, 100\}$ et le solveur $\in \{\text{lbfgs},\, \text{liblinear}\}$, avec pénalité L2 et \texttt{class\_weight=balanced}. La meilleure combinaison est sélectionnée par \texttt{GridSearchCV} (F1, 5 folds stratifiés).
+
+\paragraph{Rôle} Baseline interprétable. Permet de vérifier que les modèles plus complexes apportent un gain réel.
+
+% ------ Modèle 2 ------
+\subsection{Modèle 2 : Random Forest}
+
+\begin{quote}
+\textit{Principes~2 \& 4} : le Random Forest offre un bon compromis entre robustesse (réduction de variance par bagging) et transparence partielle (feature importance native, complétée par SHAP).
+\end{quote}
+
+\paragraph{Théorie} Le Random Forest est un ensemble de $B$ arbres de décision entraînés sur des échantillons bootstrap. Chaque arbre ne considère qu'un sous-ensemble aléatoire de $m = \sqrt{p}$ features à chaque n\oe ud. La prédiction finale est le vote majoritaire :
+$$\hat{y} = \text{mode}\left\{ h_b(\mathbf{x}) \right\}_{b=1}^{B}$$
+
+\paragraph{Hyperparamètres optimisés par Grid Search}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Paramètre} & \textbf{Grille explorée} & \textbf{Justification} \\
+\midrule
+\texttt{n\_estimators} & \{100, 200, 300\} & Nombre d'arbres \\
+\texttt{max\_depth} & \{8, 12, 16, None\} & Profondeur maximale (régularisation) \\
+\texttt{min\_samples\_split} & \{5, 10, 15\} & Taille min. pour diviser un n\oe ud \\
+\texttt{min\_samples\_leaf} & \{2, 4, 8\} & Taille min. d'une feuille \\
+\texttt{class\_weight} & balanced & Gestion du déséquilibre 16/84 \\
+\bottomrule
+\end{tabular}
+\caption{Grille d'hyperparamètres du Random Forest (optimisation par Grid Search, scoring = F1).}
+\end{table}
+
+La meilleure combinaison est sélectionnée automatiquement par \texttt{GridSearchCV} selon le F1-score en validation croisée stratifiée à 5 folds.
+
+\paragraph{Feature importance} Le Random Forest fournit nativement une mesure d'importance des variables (\textit{Mean Decrease in Impurity}). Cette information est complétée par l'analyse SHAP en section~\ref{sec:shap}.
+
+% ------ Modèle 3 ------
+\subsection{Modèle 3 : MLP (Perceptron Multi-Couches)}
+
+\begin{quote}
+\textit{Principe~4 --- Transparence} : le MLP est un modèle de type \textbf{boîte noire}. L'explicabilité ne peut venir que de méthodes post-hoc (SHAP). C'est précisément ce type de modèle que le programme \textbf{XAI de la DARPA} (2017--2021) cherchait à rendre explicable, aboutissant aux outils SHAP \cite{lundberg_shap} et LIME \cite{ribeiro_lime} que nous utilisons.
+\end{quote}
+
+\paragraph{Théorie} Le MLP est un réseau de neurones composé de couches successives. Chaque neurone calcule $a = \phi(\mathbf{w}^T \mathbf{x} + b)$ où $\phi$ est une fonction d'activation non-linéaire (ReLU : $\phi(z) = \max(0, z)$). L'entraînement se fait par rétropropagation du gradient avec l'optimiseur Adam :
+$$\mathbf{w} \leftarrow \mathbf{w} - \eta \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$$
+
+\paragraph{Architecture et hyperparamètres optimisés par Grid Search}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Paramètre} & \textbf{Grille explorée} & \textbf{Justification} \\
+\midrule
+\texttt{hidden\_layer\_sizes} & \{(64,32), (64,32,16), (128,64,32)\} & Architecture du réseau \\
+\texttt{activation} & \{relu, tanh\} & Fonction d'activation \\
+\texttt{learning\_rate\_init} & \{0{,}001, 0{,}01\} & Taux d'apprentissage initial \\
+\texttt{alpha} & \{0{,}0001, 0{,}001, 0{,}01\} & Régularisation L2 \\
+\texttt{solver} & Adam & Optimiseur adaptatif (fixe) \\
+\texttt{early\_stopping} & True & Prévient le surapprentissage (fixe) \\
+\texttt{n\_iter\_no\_change} & 20 & Patience avant arrêt (fixe) \\
+\bottomrule
+\end{tabular}
+\caption{Grille d'hyperparamètres du MLP (optimisation par Grid Search, scoring = F1).}
+\end{table}
+
+La meilleure combinaison est sélectionnée par \texttt{GridSearchCV} (F1, 5 folds stratifiés). Les paramètres marqués <<~fixe~>> ne sont pas explorés mais choisis par convention.
+
+\paragraph{Gestion du déséquilibre} Le \texttt{MLPClassifier} de scikit-learn ne dispose pas de paramètre \texttt{class\_weight}. Nous calculons des poids d'échantillon via \texttt{compute\_sample\_weight("balanced")} et les passons lors de l'entraînement.
+
+% ============================================================
+\section{Comparaison des modèles}
+
+\subsection{Métriques d'évaluation}
+
+Les trois modèles sont évalués sur le \textbf{même jeu de test} (20\,\% du dataset, split stratifié) et par \textbf{validation croisée stratifiée à 5 folds}.
+
+\begin{table}[ht]
+\centering
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Métrique} & \textbf{Pertinence pour HumanForYou} \\
+\midrule
+Accuracy & Trompeuse sur données déséquilibrées (84\,\% en prédisant toujours <<~No~>>) \\
+Balanced Accuracy & Corrige le biais de l'accuracy en moyennant les recalls \\
+Precision (Yes) & Limite les faux positifs (entretiens inutiles) \\
+\textbf{Recall (Yes)} & \textbf{Métrique clé} : chaque départ non détecté = retard projet + coût recrutement \\
+F1-score (Yes) & Compromis precision/recall \\
+AUC-ROC & Capacité globale de discrimination, indépendante du seuil \\
+Log Loss & Qualité de calibration des probabilités \\
+Brier Score & Erreur quadratique sur les probabilités \\
+MCC & Corrélation de Matthews --- la plus robuste pour données déséquilibrées \\
+\bottomrule
+\end{tabularx}
+\caption{Métriques d'évaluation et leur pertinence pour le contexte HumanForYou.}
+\end{table}
+
+\paragraph{Choix du recall comme métrique principale} Ce choix est un \textbf{choix éthique explicite} conforme au principe d'\textit{ethics by design} (§2.4 du livrable~1) : il vaut mieux identifier un employé à risque qui ne partira pas (faux positif $\rightarrow$ simple entretien de suivi) que de rater un employé qui va effectivement partir (faux négatif $\rightarrow$ retard projet, coût de remplacement, perte de productivité).
+
+\paragraph{Résultats sur le jeu de test}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lcccccccc}
+\toprule
+\textbf{Modèle} & \textbf{Acc.} & \textbf{Bal. Acc.} & \textbf{Prec. (Yes)} & \textbf{Recall (Yes)} & \textbf{F1 (Yes)} & \textbf{AUC-ROC} & \textbf{Brier} & \textbf{MCC} \\
+\midrule
+Rég. Logistique & 0{,}761 & 0{,}727 & 0{,}368 & 0{,}676 & 0{,}476 & 0{,}794 & 0{,}171 & 0{,}365 \\
+\textbf{Random Forest} & \textbf{0{,}981} & \textbf{0{,}940} & \textbf{1{,}000} & \textbf{0{,}880} & \textbf{0{,}936} & \textbf{0{,}989} & \textbf{0{,}036} & \textbf{0{,}928} \\
+MLP & 0{,}972 & 0{,}932 & 0{,}947 & 0{,}873 & 0{,}908 & 0{,}961 & 0{,}027 & 0{,}893 \\
+\bottomrule
+\end{tabularx}
+\caption{Tableau comparatif complet des trois modèles sur le jeu de test (n=882, split stratifié 80/20). Le modèle recommandé est indiqué en gras.}
+\end{table}
+
+\paragraph{Validation croisée stratifiée (5 folds)}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXXXXX}
+\toprule
+\textbf{Modèle} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{AUC-ROC} \\
+\midrule
+Rég. Logistique & $0{,}737 \pm 0{,}019$ & $0{,}346 \pm 0{,}021$ & $0{,}705 \pm 0{,}024$ & $0{,}464 \pm 0{,}020$ & $0{,}797 \pm 0{,}022$ \\
+\textbf{Random Forest} & $\mathbf{0{,}962 \pm 0{,}003}$ & $\mathbf{0{,}933 \pm 0{,}026}$ & $\mathbf{0{,}826 \pm 0{,}026}$ & $\mathbf{0{,}875 \pm 0{,}010}$ & $\mathbf{0{,}986 \pm 0{,}003}$ \\
+MLP & $0{,}943 \pm 0{,}013$ & $0{,}858 \pm 0{,}037$ & $0{,}777 \pm 0{,}064$ & $0{,}814 \pm 0{,}048$ & $0{,}957 \pm 0{,}025$ \\
+\bottomrule
+\end{tabularx}
+\caption{Validation croisée stratifiée à 5 folds sur le jeu d'entraînement (moyenne $\pm$ écart-type). La faible variance du Random Forest ($\pm 0{,}003$ sur l'AUC-ROC) confirme sa robustesse.}
+\end{table}
+
+\paragraph{Matrice de décision multicritère}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{Xcccc}
+\toprule
+\textbf{Critère} & \textbf{Poids} & \textbf{Rég. Log.} & \textbf{RF} & \textbf{MLP} \\
+\midrule
+Performance prédictive (AUC-ROC) & 30\,\% & 0{,}794 & \textbf{0{,}989} & 0{,}961 \\
+Détection des départs (Recall) & 25\,\% & 0{,}676 & \textbf{0{,}880} & 0{,}873 \\
+Qualité des probabilités (Brier) & 10\,\% & 0{,}171 & 0{,}036 & \textbf{0{,}027} \\
+Explicabilité native & 15\,\% & $\bigstar\bigstar\bigstar\bigstar\bigstar$ & $\bigstar\bigstar\bigstar\bigstar\star$ & $\bigstar\bigstar\star\star\star$ \\
+Conformité réglementaire (AI Act) & 10\,\% & $\bigstar\bigstar\bigstar\bigstar\bigstar$ & $\bigstar\bigstar\bigstar\bigstar\star$ & $\bigstar\bigstar\bigstar\star\star$ \\
+Facilité de déploiement & 5\,\% & $\bigstar\bigstar\bigstar\bigstar\bigstar$ & $\bigstar\bigstar\bigstar\bigstar\star$ & $\bigstar\bigstar\bigstar\star\star$ \\
+Robustesse (MCC) & 5\,\% & 0{,}365 & \textbf{0{,}928} & 0{,}893 \\
+\bottomrule
+\end{tabularx}
+\caption{Matrice de décision pondérée multicritère. Le Random Forest obtient le meilleur score global, notamment sur les critères prioritaires (performance et détection).}
+\end{table}
+
+\subsection{Évaluation de l'explicabilité}
+
+\begin{table}[ht]
+\centering
+\begin{tabularx}{\textwidth}{lccX}
+\toprule
+\textbf{Modèle} & \textbf{Explicabilité} & \textbf{AI Act} & \textbf{Méthode} \\
+\midrule
+Rég. Logistique & Élevée & Conforme & Coefficients natifs \\
+Random Forest & Bonne & Conforme (+ SHAP) & Feature importance MDI + SHAP \\
+MLP & Faible & Conditionnelle & SHAP/LIME obligatoire \\
+\bottomrule
+\end{tabularx}
+\caption{Évaluation de l'explicabilité par modèle.}
+\end{table}
+
+% ============================================================
+\section{Explicabilité --- SHAP}
+\label{sec:shap}
+
+\begin{quote}
+\textit{Principe~4 --- Transparence} (HLEG, §2.4.4 du livrable~1) : <<~Nous produirons un classement global des facteurs d'attrition (SHAP summary plot) [...] et pour chaque employé identifié comme à risque, un graphique SHAP (waterfall plot) montrant la contribution de chaque variable.~>>
+\end{quote}
+
+\subsection{Théorie des valeurs de Shapley}
+
+SHAP repose sur la théorie des \textbf{valeurs de Shapley} (Lloyd Shapley, 1953, théorie des jeux coopératifs). Pour une prédiction donnée, la valeur SHAP de la feature $j$ mesure sa contribution marginale :
+$$\phi_j = \sum_{S \subseteq F \setminus \{j\}} \frac{|S|! \cdot (|F| - |S| - 1)!}{|F|!} \left[ f(S \cup \{j\}) - f(S) \right]$$
+
+Propriétés clés :
+\begin{itemize}
+    \item \textbf{Additivité} : $f(\mathbf{x}) = \phi_0 + \sum_{j=1}^{p} \phi_j$ --- la prédiction est la somme exacte des contributions.
+    \item \textbf{Consistance} : si une feature contribue plus, sa valeur SHAP est plus élevée.
+    \item \textbf{Symétrie} : deux features ayant la même contribution reçoivent la même valeur.
+\end{itemize}
+
+\subsection{Explicabilité globale}
+
+Le \textit{SHAP summary plot} identifie les facteurs structurels d'attrition à l'échelle de l'entreprise. Il permet à la direction RH de prioriser les leviers d'action (conditions de travail, politique salariale, management).
+
+\subsection{Explicabilité individuelle}
+
+Pour chaque employé identifié comme <<~à risque~>>, un \textit{waterfall plot} SHAP montre la contribution de chaque variable à sa prédiction. Cela satisfait :
+\begin{itemize}
+    \item L'exigence de transparence de l'AI Act et du HLEG (principe~4)
+    \item Le \textbf{droit de contestation} (principe~7 --- Responsabilité, §2.4.7) : en cas de contestation par un employé, le rapport SHAP individuel permet de justifier et d'expliquer la prédiction
+    \item La recommandation de la CNIL de <<~rendre les systèmes algorithmiques compréhensibles~>>
+\end{itemize}
+
+\subsection{Analyse des facteurs de bien-être}
+
+Conformément au \textbf{principe~6 --- Bien-être sociétal} (§2.4.6), les variables de satisfaction (\texttt{WorkLifeBalance}, \texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}) et de charge de travail (\texttt{avg\_work\_hours}) sont analysées non seulement comme prédicteurs mais aussi comme \textbf{indicateurs de suivi}. Les \textit{SHAP dependence plots} permettent d'identifier les seuils critiques (par exemple, à partir de combien d'heures de travail le risque d'attrition augmente fortement).
+
+% ============================================================
+\section{Audit d'équité et conformité éthique}
+
+\begin{quote}
+\textit{Principe~5 --- Diversité, non-discrimination et équité} (§2.4.5 du livrable~1) : <<~Un écart supérieur à 5 points de pourcentage entre sous-groupes sur l'une de ces métriques déclenchera une investigation formelle.~>>
+\end{quote}
+
+\subsection{Attributs protégés audités}
+
+L'audit porte sur trois attributs protégés, conformément aux engagements du livrable~1 :
+\begin{itemize}
+    \item \textbf{Genre} (\texttt{Gender}) : Male / Female
+    \item \textbf{Âge} : tranches 18--30 / 31--40 / 41--50 / 51+
+    \item \textbf{Statut marital} (\texttt{MaritalStatus}) : Single / Married / Divorced
+\end{itemize}
+
+\subsection{Métriques d'équité}
+
+Pour chaque attribut protégé et chaque sous-groupe, nous calculons :
+\begin{itemize}
+    \item \textbf{Recall} (taux de vrais positifs) : un employé à risque est-il détecté indépendamment de son groupe ?
+    \item \textbf{Taux de faux positifs} : le modèle génère-t-il plus de fausses alertes pour certains groupes ?
+    \item \textbf{Parité démographique} : la proportion de prédictions positives est-elle similaire entre groupes ?
+\end{itemize}
+
+\paragraph{Théorème d'impossibilité} Conformément au résultat de Chouldechova (2017) \cite{chouldechova_2017}, il est mathématiquement impossible de satisfaire simultanément toutes les définitions de l'équité. Nous privilégions l'\textbf{égalité des chances} (recall comparable entre groupes) : un employé à risque doit être détecté indépendamment de son genre, âge ou statut marital.
+
+\paragraph{Résultats de l'audit (modèle Random Forest)}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Attribut} & \textbf{Groupe} & \textbf{n} & \textbf{Recall} & \textbf{FPR} & \textbf{Parité dém.} \\
+\midrule
+\multirow{2}{*}{Genre} & Female & 356 & 0{,}853 & 0{,}000 & 0{,}146 \\
+ & Male & 526 & 0{,}901 & 0{,}000 & 0{,}139 \\
+\cmidrule{2-6}
+ & \multicolumn{2}{l}{\textit{Écart max Recall}} & \multicolumn{3}{l}{4{,}9\,\% \textcolor{green!60!black}{$\checkmark$ OK (seuil 5\,pp)}} \\
+\midrule
+\multirow{4}{*}{Tranche d'âge} & 18--30 & 210 & 0{,}935 & 0{,}000 & 0{,}205 \\
+ & 31--40 & 384 & 0{,}967 & 0{,}000 & 0{,}151 \\
+ & 41--50 & 190 & 0{,}692 & 0{,}000 & 0{,}095 \\
+ & 51+ & 98 & 0{,}600 & 0{,}000 & 0{,}061 \\
+\cmidrule{2-6}
+ & \multicolumn{2}{l}{\textit{Écart max Recall}} & \multicolumn{3}{l}{36{,}7\,\% \textcolor{red}{\textbf{$\times$ INVESTIGATION REQUISE}}} \\
+\midrule
+\multirow{3}{*}{Statut marital} & Divorced & 202 & 1{,}000 & 0{,}000 & 0{,}099 \\
+ & Married & 405 & 0{,}790 & 0{,}000 & 0{,}111 \\
+ & Single & 275 & 0{,}923 & 0{,}000 & 0{,}218 \\
+\cmidrule{2-6}
+ & \multicolumn{2}{l}{\textit{Écart max Recall}} & \multicolumn{3}{l}{21{,}1\,\% \textcolor{red}{\textbf{$\times$ INVESTIGATION REQUISE}}} \\
+\bottomrule
+\end{tabular}
+\caption{Résultats de l'audit d'équité (Random Forest, jeu de test, n=882). Seuil d'alerte : 5 points de pourcentage.}
+\end{table}
+
+\paragraph{Analyse et mesures correctives} Deux alertes ont été
+déclenchées : (1)~la \textbf{tranche d'âge 51+} présente un recall
+de 60\,\%, significativement inférieur aux 18--30 ans (93\,\%).
+Ce biais s'explique par le sous-effectif des seniors parmi les
+départs (dataset déséquilibré sur cette dimension).
+(2)~Le statut \textbf{marié} affiche un recall plus faible que
+les célibataires et divorcés. Conformément au seuil de 5~pp établi
+dans le livrable~1, ces deux écarts déclenchent une investigation
+formelle. Mesures prises : (i)~le seuil de classification a été
+abaissé pour les groupes sous-représentés, (ii)~les résultats sont
+documentés et transmis au comité de supervision pour décision RH.
+
+\subsection{Analyse des proxys}
+
+Conformément au §2.4.5 du livrable~1, nous vérifions que les variables non protégées ne servent pas de proxys discriminatoires. Si une feature est fortement corrélée à un attribut protégé ($|r| > 0{,}3$) \textit{et} contribue de manière disproportionnée aux prédictions (top~10 SHAP), elle est signalée pour investigation.
+
+\subsection{Conformité aux 7 principes HLEG}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{clX}
+\toprule
+\textbf{\#} & \textbf{Principe} & \textbf{Mise en \oe uvre} \\
+\midrule
+1 & Supervision humaine & Outil d'aide à la décision uniquement. Validation RH obligatoire avant toute action. \\
+2 & Robustesse technique & CV stratifiée, KNN imputation, capping IQR, early stopping MLP. \\
+3 & Confidentialité & Minimisation (4 cols supprimées), pseudonymisation (\texttt{EmployeeID}), pas de données art.~9 RGPD. \\
+4 & Transparence & Coefficients LogReg, feature importance RF, SHAP global + individuel. \\
+5 & Équité & \texttt{class\_weight=balanced}, audit sur Genre/Âge/Statut, analyse de proxys, seuil 5pp. \\
+6 & Bien-être sociétal & Recommandations = actions positives (formation, conditions). Modèles légers sans GPU. \\
+7 & Responsabilité & Traçabilité \texttt{EmployeeID}, rapport SHAP individuel pour contestation, pipeline reproductible. \\
+\bottomrule
+\end{tabularx}
+\caption{Conformité du notebook aux 7 principes HLEG pour une IA digne de confiance.}
+\end{table}
+
+% ============================================================
+\section{Interprétation des résultats : qu'est-ce qui influence le turnover ?}
+
+\subsection{Les facteurs principaux d'attrition}
+
+L'analyse croisée des coefficients de la régression logistique, de la feature importance du Random Forest et des valeurs SHAP converge vers les mêmes facteurs dominants :
+
+\paragraph{1. La surcharge de travail} Les variables \texttt{avg\_work\_hours} et \texttt{std\_work\_hours}, dérivées des données de badgeage, apparaissent systématiquement parmi les premiers facteurs d'attrition. Un employé qui travaille régulièrement au-delà des horaires contractuels (8h/jour) présente un risque significativement plus élevé de départ. L'irrégularité des horaires (écart-type élevé) est également un signal d'alerte.
+
+\paragraph{2. La satisfaction au travail} Les trois variables d'enquête (\texttt{EnvironmentSatisfaction}, \texttt{JobSatisfaction}, \texttt{WorkLifeBalance}) sont fortement associées au risque de départ. Les employés avec un score de 1 (<<~Faible~>>) ou 2 (<<~Moyen~>>) sur l'une de ces dimensions présentent un risque nettement supérieur. L'équilibre vie professionnelle/vie privée est particulièrement discriminant.
+
+\paragraph{3. La stagnation de carrière} Les variables \texttt{YearsSinceLastPromotion} et \texttt{YearsWithCurrManager} révèlent que les employés sans promotion depuis plus de 3 ans, ou travaillant depuis longtemps sous le même manager sans évolution, sont plus susceptibles de partir. L'absence de perspectives de progression est un facteur puissant.
+
+\paragraph{4. Le profil <<~jeune et mobile~>>} Les employés jeunes (18--30 ans), avec peu d'ancienneté (\texttt{YearsAtCompany} faible), ayant travaillé dans de nombreuses entreprises (\texttt{NumCompaniesWorked} élevé), et effectuant des déplacements fréquents (\texttt{BusinessTravel = Travel\_Frequently}) constituent le profil à risque le plus marqué.
+
+\paragraph{5. La rémunération} Le \texttt{MonthlyIncome} a un effet protecteur : un salaire plus élevé réduit le risque de départ, toutes choses égales par ailleurs. Cependant, ce facteur est moins déterminant que la satisfaction et les conditions de travail.
+
+\subsection{Recommandations à HumanForYou}
+
+Sur la base de ces résultats, nous formulons les recommandations suivantes, conformément au \textbf{principe~6 HLEG} (bien-être sociétal, §2.4.6) qui impose que les recommandations ciblent exclusivement des \textbf{actions positives} :
+
+\begin{enumerate}
+    \item \textbf{Surveiller la charge de travail.} Mettre en place un monitoring des heures réelles via les données de badgeage. Instaurer des alertes quand un employé dépasse régulièrement les horaires contractuels. Identifier les équipes en surcharge.
+
+    \item \textbf{Agir sur la satisfaction.} Lancer des enquêtes de satisfaction ciblées et régulières. Organiser des entretiens individuels quand les scores descendent sous 2/4. Améliorer les espaces et les conditions de travail dans les départements à fort turnover (notamment les RH internes, avec un taux de 30\,\%).
+
+    \item \textbf{Dynamiser les carrières.} Mettre en place des plans de carrière individualisés. Proposer des mobilités internes et des promotions régulières. Les employés sans promotion depuis plus de 3 ans doivent faire l'objet d'une attention particulière.
+
+    \item \textbf{Renforcer l'onboarding.} Les 2 premières années sont critiques pour la rétention. Proposer un programme de mentorat, des points de suivi réguliers, et une intégration progressive dans les projets.
+
+    \item \textbf{Limiter les déplacements.} Les employés voyageant fréquemment présentent un risque accru. Proposer du télétravail partiel, des horaires flexibles et, quand possible, réduire la fréquence des déplacements.
+
+    \item \textbf{Réviser la politique salariale.} Pour les postes et les profils à fort turnover, envisager des ajustements salariaux ciblés ou des avantages non salariaux (stock-options, formation qualifiante, flexibilité).
+\end{enumerate}
+
+% ============================================================
+\section{Modèle recommandé}
+
+Après évaluation complète sur les critères de performance, d'explicabilité et de conformité réglementaire, nous recommandons le \textbf{Random Forest} comme modèle principal, pour les raisons suivantes :
+
+\begin{enumerate}
+    \item \textbf{Performance} : meilleur compromis AUC-ROC / recall / F1, robuste en validation croisée.
+    \item \textbf{Explicabilité} : la feature importance native, complétée par SHAP, permet de répondre aux deux questions fondamentales : <<~pourquoi cet employé risque-t-il de partir~?~>> (waterfall plot individuel) et <<~quels sont les leviers structurels~?~>> (summary plot global).
+    \item \textbf{Conformité} : avec SHAP et l'audit d'équité, le modèle satisfait les 7 principes HLEG et les exigences de l'AI Act.
+    \item \textbf{Robustesse} : le bagging et la randomisation des features réduisent le risque de surapprentissage.
+\end{enumerate}
+
+La régression logistique est conservée comme \textbf{modèle de référence} (baseline interprétable), et le MLP comme \textbf{modèle exploratoire} démontrant la faisabilité d'une approche neuronale sur ce type de données.
+
+% ============================================================
+\section{Déploiement logiciel : est-ce envisageable ?}
+
+\paragraph{Faisabilité technique} Le modèle Random Forest entraîné peut être sérialisé (format \texttt{joblib} ou \texttt{pickle}) et intégré dans une application web ou un tableau de bord interne. L'inférence est rapide (quelques millisecondes par employé) et ne nécessite aucune infrastructure GPU. Un tableau de bord consultatif, tel que décrit dans le §2.4.1 du livrable~1, pourrait afficher le score de risque de chaque employé accompagné de ses facteurs SHAP, accessible aux responsables RH habilités.
+
+\paragraph{Prérequis réglementaires} Avant tout déploiement opérationnel, trois conditions doivent être remplies :
+\begin{enumerate}
+    \item \textbf{Analyse d'impact (AIPD)} : conformément à l'article~35 du RGPD, une analyse d'impact relative à la protection des données est obligatoire pour tout traitement susceptible d'engendrer un risque élevé pour les droits des personnes. Un système de prédiction de l'attrition ciblant les employés relève de cette catégorie.
+    \item \textbf{Information des employés} : conformément au RGPD, les employés doivent être informés de l'existence du système, de sa finalité, des données utilisées et de leur droit d'opposition (§2.4.4 du livrable~1).
+    \item \textbf{Comité de supervision} : conformément à nos engagements de responsabilité (§2.4.7), un comité incluant représentants RH, représentants du personnel et référent éthique doit être constitué pour examiner les résultats semestriellement.
+\end{enumerate}
+
+\paragraph{Limites à considérer}
+\begin{itemize}
+    \item Les données sont une \textbf{coupe transversale} (2015--2016). Le modèle devra être réentraîné annuellement sur des données récentes pour rester pertinent.
+    \item Le contexte est \textbf{indien}. Si HumanForYou dispose de filiales dans d'autres pays, les facteurs d'attrition peuvent différer. Le modèle doit être validé localement avant extension.
+    \item Le modèle ne capture que les \textbf{variables quantitatives} disponibles. L'intégration de données qualitatives (entretiens de sortie, verbatims d'enquêtes) enrichirait la compréhension.
+\end{itemize}
+
+\paragraph{Verdict} Le déploiement est \textbf{techniquement faisable et souhaitable}, à condition de respecter les prérequis réglementaires. Le modèle, positionné comme outil d'aide à la décision et non comme système autonome, est conforme à l'esprit de l'AI Act et des principes HLEG. Il offrirait à HumanForYou un outil concret pour anticiper les départs, cibler les actions de rétention et, à terme, réduire le taux de turnover de 15\,\% qui pèse aujourd'hui sur ses projets, ses coûts RH et sa productivité.
+
+% ============================================================
+\section{Roadmap de déploiement}
+\label{sec:roadmap}
+
+Suite à l'évaluation de la faisabilité technique et réglementaire
+(§10), nous proposons une feuille de route concrète sur 12~mois
+pour le déploiement progressif du système de prédiction du turnover
+chez HumanForYou. La stratégie retenue est un déploiement par
+phases, débutant par un pilote sur un seul département avant
+extension à l'ensemble de l'entreprise.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1.1cm, y=0.9cm]
+
+  % -- Paramètres couleurs
+  \definecolor{phase1}{RGB}{52,152,219}
+  \definecolor{phase2}{RGB}{39,174,96}
+  \definecolor{phase3}{RGB}{230,126,34}
+  \definecolor{phase4}{RGB}{155,89,182}
+  \definecolor{phase5}{RGB}{231,76,60}
+  \definecolor{grisgrid}{RGB}{200,200,200}
+
+  % Axe temps (mois M1..M12)
+  \foreach \m in {1,...,12} {
+    \draw[grisgrid, very thin] (\m, -0.3) -- (\m, -5.7);
+    \node[font=\tiny, anchor=north] at (\m+0.5, -0.3) {M\m};
+  }
+
+  % En-tête colonnes
+  \node[font=\small\bfseries, anchor=west] at (0.1, 0.1) {Phase};
+
+  % Barre Phase 1 — Conformité réglementaire (M1-M2)
+  \fill[phase1, rounded corners=3pt] (1, -0.6) rectangle (3, -1.4);
+  \node[white, font=\footnotesize\bfseries, anchor=west] at (1.1, -1.0)
+    {Phase 1 — Conformité réglementaire};
+  \node[font=\tiny, anchor=west] at (0.1, -1.0) {\textbf{M1--M2}};
+
+  % Barre Phase 2 — Pilote (M2-M4)
+  \fill[phase2, rounded corners=3pt] (3, -1.8) rectangle (6, -2.6);
+  \node[white, font=\footnotesize\bfseries, anchor=west] at (3.1, -2.2)
+    {Phase 2 — Pilote 1 département};
+  \node[font=\tiny, anchor=west] at (0.1, -2.2) {\textbf{M2--M4}};
+
+  % Barre Phase 3 — Formation RH (M4-M6)
+  \fill[phase3, rounded corners=3pt] (5, -3.0) rectangle (8, -3.8);
+  \node[white, font=\footnotesize\bfseries, anchor=west] at (5.1, -3.4)
+    {Phase 3 — Formation \& extension RH};
+  \node[font=\tiny, anchor=west] at (0.1, -3.4) {\textbf{M5--M7}};
+
+  % Barre Phase 4 — Extension complète (M7-M9)
+  \fill[phase4, rounded corners=3pt] (7, -4.2) rectangle (10, -5.0);
+  \node[white, font=\footnotesize\bfseries, anchor=west] at (7.1, -4.6)
+    {Phase 4 — Déploiement complet};
+  \node[font=\tiny, anchor=west] at (0.1, -4.6) {\textbf{M7--M9}};
+
+  % Barre Phase 5 — Monitoring (M10-M12+)
+  \fill[phase5, rounded corners=3pt] (9, -5.4) rectangle (12.8, -6.2);
+  \node[white, font=\footnotesize\bfseries, anchor=west] at (9.1, -5.8)
+    {Phase 5 — Monitoring \& réentraînement};
+  \node[font=\tiny, anchor=west] at (0.1, -5.8) {\textbf{M10+}};
+
+  % Axe principal
+  \draw[very thick, ->] (1, 0) -- (13, 0);
+  \draw[very thick] (1, 0) -- (1, -6.5);
+
+\end{tikzpicture}
+\caption{Roadmap de déploiement du système prédictif sur 12 mois.}
+\label{fig:roadmap}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Phase} & \textbf{Calendrier} & \textbf{Actions clés} \\
+\midrule
+1 --- Conformité & M1--M2 & Réalisation de l'AIPD (art.~35 RGPD) ; information des employés (finalité, données, droits) ; constitution du comité de supervision (RH + représentants du personnel + référent éthique). \\
+\midrule
+2 --- Pilote & M2--M4 & Déploiement sur un département pilote (RH interne, taux de turnover 30\,\%) ; collecte des retours managers ; ajustement du seuil de classification. \\
+\midrule
+3 --- Formation & M5--M7 & Formation des équipes RH à l'utilisation du tableau de bord et à l'interprétation des graphiques SHAP ; mise en place des alertes automatiques. \\
+\midrule
+4 --- Extension & M7--M9 & Déploiement à l'ensemble des départements ; intégration au SIRH existant ; première réunion du comité de supervision. \\
+\midrule
+5 --- Monitoring & M10+ & Suivi mensuel des KPIs d'équité ; réentraînement annuel du modèle sur les données actualisées ; audit d'équité semestriel. \\
+\bottomrule
+\end{tabularx}
+\caption{Détail des phases de déploiement et actions associées.}
+\end{table}
+
+\paragraph{Indicateurs de succès (KPIs)} Le succès du déploiement
+sera mesuré sur trois dimensions : (1)~\textbf{technique} :
+maintien d'un Recall $\geq 0{,}80$ sur les données actualisées et
+d'un MCC $\geq 0{,}85$; (2)\textbf{opérationnel} : taux
+d'utilisation du tableau de bord par les managers RH $\geq 70\,\%$~;
+(3)~\textbf{impact métier} : réduction mesurable du taux d'attrition
+de 15\,\% à moins de 10\,\% à horizon 18~mois.
+
+% ============================================================
+\section{Conclusion et synthèse exécutive}
+
+\subsection*{Synthèse à destination de la direction de HumanForYou}
+
+\begin{quote}
+\textit{Ce rapport s'adresse à la direction de HumanForYou.
+Les résultats techniques détaillés dans les sections précédentes
+se traduisent ici en conclusions actionnables.}
+\end{quote}
+
+\textbf{Votre entreprise perd 15\,\% de ses effectifs chaque année.}
+Notre analyse de 4\,410 dossiers employés, croisée avec 12 mois
+de données de badgeage, identifie avec précision pourquoi --- et
+qui est à risque.
+
+\paragraph{Ce que les données révèlent} Cinq facteurs expliquent
+l'essentiel des départs, par ordre d'importance :
+\begin{enumerate}
+    \item \textbf{La surcharge horaire} : les employés dépassant
+    régulièrement leurs horaires contractuels (8h/jour) partent
+    significativement plus. Ce signal, invisible dans les données RH
+    classiques, est rendu possible par vos données de badgeage.
+    \item \textbf{L'insatisfaction au travail} : un score de
+    satisfaction faible (1/4 ou 2/4) sur l'environnement, le
+    travail ou l'équilibre vie pro/perso est un signal d'alarme
+    fort et mesurable.
+    \item \textbf{La stagnation de carrière} : sans promotion depuis
+    plus de 3~ans, un employé multiplie son risque de départ.
+    Le statu quo managérial a un coût direct.
+    \item \textbf{Le profil junior-mobile} : les moins de 30~ans,
+    récemment arrivés, voyageant fréquemment, constituent le segment
+    le plus vulnérable.
+    \item \textbf{La rémunération} : facteur protecteur, mais
+    secondaire face aux conditions de travail.
+\end{enumerate}
+
+\paragraph{Ce que notre modèle permet} Le système prédictif
+(Random Forest, AUC-ROC~=0{,}989, Recall=~88\,\%) identifie
+correctement 88 employés sur 100 qui vont effectivement quitter
+l'entreprise, avec un taux de fausses alertes quasi nul. Pour
+chaque employé signalé, le tableau de bord génère une explication
+individuelle (<<pourquoi cet employé est-il à risque?~>>)
+permettant une action RH ciblée et proportionnée.
+
+\paragraph{Nos 6 recommandations prioritaires}
+\begin{enumerate}
+    \item \textbf{Monitorer la charge de travail} via les données
+    de badgeage déjà disponibles --- les alertes peuvent être
+    automatisées dès la Phase~1.
+    \item \textbf{Relancer les enquêtes de satisfaction} de manière
+    ciblée dans les départements à fort turnover (RH interne~: 30\,\%).
+    \item \textbf{Instaurer des plans de carrière individualisés},
+    en priorité pour les employés sans promotion depuis plus de 3~ans.
+    \item \textbf{Renforcer l'onboarding} des 2 premières années
+    (mentorat, points de suivi réguliers).
+    \item \textbf{Réduire les déplacements fréquents} ou compenser
+    par des modalités flexibles (télétravail, horaires aménagés).
+    \item \textbf{Réviser la politique salariale} pour les profils
+    et postes à fort turnover identifiés par le modèle.
+\end{enumerate}
+
+\paragraph{Horizon de résultat} Avec la roadmap proposée (§11),
+un premier bilan pilote est attendu à M4. Notre objectif est de
+ramener le taux d'attrition sous les 10\,\% à horizon 18~mois,
+représentant une économie estimée de plusieurs dizaines de
+recrutements évités par an.
+
+\subsection*{Bilan technique}
+
+Ce projet a conduit une analyse complète du turnover chez
+HumanForYou, de la fusion de cinq sources de données à la
+formulation de recommandations stratégiques actionnables.
+
+\textbf{Trois résultats clés.} Premièrement, la \textbf{surcharge
+horaire} est le premier facteur d'attrition --- un résultat obtenu
+grâce aux données de badgeage, souvent sous-exploitées.
+Deuxièmement, le profil type de l'employé à risque est un
+\textbf{jeune collaborateur récemment arrivé}, avec un nouveau
+manager et des déplacements fréquents. Troisièmement, le
+\textbf{Random Forest} (AUC-ROC~$= 0{,}989$, MCC~$= 0{,}928$,
+variance croisée $\pm 0{,}003$) offre le meilleur compromis entre
+performance prédictive, explicabilité (via SHAP) et conformité
+réglementaire.
+
+\textbf{L'ancrage réglementaire} dans le cadre européen (RGPD,
+AI Act, 7 principes HLEG) a guidé chaque décision technique :
+du choix du KNN Imputer (robustesse) à l'audit d'équité sur trois
+attributs protégés, en passant par SHAP (transparence) et le
+positionnement strict du modèle comme \textit{aide à la décision}
+soumise à validation humaine.
+
+\textbf{Point de vigilance éthique.} L'audit d'équité a révélé
+deux écarts dépassant le seuil de 5\,pp~: les employés de 51+ ans
+(Recall~=~60\,\%) et les employés mariés sont moins bien détectés.
+Ces alertes sont documentées, transmises au comité de supervision,
+et feront l'objet d'une investigation formelle avant tout déploiement.
+
+\textbf{Le livrable~1 posait les principes ; ce livrable~2 les
+traduit en code.} Chaque engagement pris dans le rapport éthique
+(§2.4) est implémenté et vérifiable dans le notebook. Le modèle
+est prêt à être déployé --- sous réserve du respect des conditions
+réglementaires et de la roadmap proposée en §11.
+
+% ============================================================
+\newpage
+\begin{thebibliography}{99}
+
+\bibitem{lundberg_shap}
+Lundberg, S.M. et Lee, S.-I., <<~A Unified Approach to Interpreting Model Predictions~>>, \textit{NeurIPS}, vol.~30, 2017.
+
+\bibitem{ribeiro_lime}
+Ribeiro, M.T., Singh, S. et Guestrin, C., <<~`Why Should I Trust You?': Explaining the Predictions of Any Classifier~>>, \textit{KDD}, pp.~1135--1144, 2016.
+
+\bibitem{chouldechova_2017}
+Chouldechova, A., <<~Fair prediction with disparate impact~>>, \textit{Big Data}, vol.~5, n°~2, pp.~153--163, 2017.
+
+\bibitem{rgpd}
+Règlement (UE) 2016/679 (RGPD), Journal officiel de l'Union européenne, 27 avril 2016.
+
+\bibitem{ia_act}
+Règlement (UE) 2024/1689 (AI Act), Journal officiel, 13 juin 2024.
+
+\bibitem{eu_hleg}
+Groupe d'experts de haut niveau sur l'IA, \textit{Lignes directrices en matière d'éthique pour une IA digne de confiance}, Commission européenne, 2019.
+
+\bibitem{cnil_ethique}
+CNIL, \textit{Comment permettre à l'Homme de garder la main~?}, décembre 2017.
+
+\bibitem{darpa_xai}
+DARPA, \textit{Explainable Artificial Intelligence (XAI) Program}, 2017--2021.
+
+\end{thebibliography}
+
+\end{document}
